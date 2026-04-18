@@ -1,0 +1,32 @@
+{
+  "logistic_regression": {
+    "prediction_file": "data\\predictions\\logistic_regression_walk_forward_predictions.csv",
+    "metrics_file": "models\\reports\\logistic_regression_walk_forward_metrics.csv",
+    "model_file": "models\\artifacts\\logistic_regression.joblib",
+    "summary_metrics": {
+      "accuracy": 0.5003030303030304,
+      "precision": 0.5148531060105388,
+      "recall": 0.6925516292457812,
+      "f1": 0.5768924544045504,
+      "roc_auc": 0.5248772565172634,
+      "fold": 17.0,
+      "train_rows": 5200.0,
+      "test_rows": 200.0
+    }
+  },
+  "hist_gradient_boosting": {
+    "prediction_file": "data\\predictions\\hist_gradient_boosting_walk_forward_predictions.csv",
+    "metrics_file": "models\\reports\\hist_gradient_boosting_walk_forward_metrics.csv",
+    "model_file": "models\\artifacts\\hist_gradient_boosting.joblib",
+    "summary_metrics": {
+      "accuracy": 0.5168181818181818,
+      "precision": 0.5313071353172293,
+      "recall": 0.538430184780278,
+      "f1": 0.5256842665919095,
+      "roc_auc": 0.5282029290109793,
+      "fold": 17.0,
+      "train_rows": 5200.0,
+      "test_rows": 200.0
+    }
+  }
+}

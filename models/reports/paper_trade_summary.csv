@@ -1,0 +1,2 @@
+initial_capital,final_equity,strategy_total_return,buy_hold_return,excess_return_vs_buy_hold,max_drawdown,bars,time_in_market_pct,trade_count,win_rate,avg_trade_return,median_trade_return,avg_bars_held,total_fees_paid,total_slippage_proxy
+10000.0,4033.996309786216,-0.5966003690213784,-0.1298864423864423,-0.46671392663493605,-0.6819809706169537,6600,0.45,752,0.39095744680851063,-0.0021051690827017526,-0.0018400137385473398,3.9520639147802927,4446.489966946754,2461.65687

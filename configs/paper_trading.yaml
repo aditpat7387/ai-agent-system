@@ -1,0 +1,30 @@
+strategy:
+  strategy_name: compression_specialist_paper_v1
+  entry_threshold: 0.78
+  required_regime: compression
+  required_label: 1
+
+risk:
+  initial_equity: 100000.0
+  risk_pct: 0.01
+  fee_bps: 4.0
+  slippage_bps: 3.0
+  stop_vol_mult: 2.0
+  rr_multiple: 2.0
+  max_hold_bars: 12
+  min_stop_pct: 0.005
+
+data:
+  predictions_table: ethusd_predictions_calibrated_v7
+  start_time: null
+
+storage:
+  output_dir: artifacts/paper_trading
+  runtime_table: compression_specialist_paper_runtime_v1
+  signals_table: compression_specialist_paper_signals_v1
+  trades_table: compression_specialist_paper_trades_v1
+  metrics_table: compression_specialist_paper_metrics_v1
+
+runtime:
+  allow_same_bar_reentry: false
+  export_csv_each_run: true

@@ -1,0 +1,21 @@
+target:
+  symbol: ETHUSDT
+  canonical_symbol: ETHUSD
+
+provider:
+  name: binance
+  base_url: https://api.binance.com
+  klines_endpoint: /api/v3/klines
+
+ingestion:
+  interval: 1h
+  lookback_days: 365
+  limit_per_call: 1000
+  request_pause_seconds: 0.5
+
+storage:
+  raw_dir: data/raw/binance
+  processed_dir: data/processed/market
+  db_path: data/market.duckdb
+  training_table: ethusd_training_1h_v5
+  predictions_table: ethusd_wfo_predictions_v4
