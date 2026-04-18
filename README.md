@@ -1,317 +1,448 @@
-# Regime-Aware Trading Model Pipeline
+# Claudex
 
-A research-to-production style machine learning pipeline for **regime classification, probability diagnostics, calibration analysis, specialist modeling, and trading-oriented backtesting** on time-series market data.
+> A regime-aware machine learning pipeline for selective trading on ETH/USD 1H data.
 
-This repository documents the work built from scratch across the project lifecycle: data storage, analysis scripts, model diagnostics, compression-vs-rest research, specialist strategy backtests, calibration studies, and dashboard-style reporting artifacts.
+![Python](https://img.shields.io/badge/Python-3.11-blue?style=flat-square)
+![DuckDB](https://img.shields.io/badge/DuckDB-1.0%2B-orange?style=flat-square)
+![Status](https://img.shields.io/badge/Status-Active-brightgreen?style=flat-square)
+![License](https://img.shields.io/badge/License-MIT-lightgrey?style=flat-square)
 
-***
+---
 
-## What this project does
+## Table of Contents
 
-This project explores a **regime-aware modeling approach** rather than treating all market states as one uniform prediction problem.
+- [Overview](#overview)
+- [Project Structure](#project-structure)
+- [Getting Started](#getting-started)
+- [Pipeline Stages](#pipeline-stages)
+- [Key Scripts](#key-scripts)
+- [Artifacts](#artifacts)
+- [Data Layer](#data-layer)
+- [Tech Stack](#tech-stack)
+- [Research Findings](#research-findings)
+- [Roadmap](#roadmap)
+- [License](#license)
 
-At a high level, the workflow is:
+---
 
-1. Store and query model-ready datasets in **DuckDB**.
-2. Analyze regime structure and class balance across market states.
-3. Evaluate raw and calibrated probability behavior.
-4. Isolate the **compression regime** as a harder sub-problem.
-5. Build and test a **compression specialist** strategy.
-6. Export interpretable CSV and image artifacts.
-7. Surface current model insights through an HTML dashboard/reporting layer.
+## Overview
 
-***
+**Claudex** is a research-to-production machine learning pipeline built from scratch on one year of ETH/USD hourly data (April 2025 – April 2026).
 
-## Core ideas behind the work
+The core hypothesis is that one model does not perform equally well across all market conditions. Claudex addresses this by:
 
-### Regime-first modeling
-Instead of assuming one model behaves equally well everywhere, the project examines model behavior by market regime and treats regime segmentation as a first-class analytical dimension.
+- Classifying market data into distinct **regimes** such as compression and expansion
+- Building **specialist models** for the hardest regime, compression
+- Validating predictions using **expanding walk-forward out-of-sample evaluation**
+- Testing strategies through **realistic paper trading** with fees and slippage
+- Surfacing all results through **operational dashboard artifacts**
 
-### Compression specialist focus
-A major thread of the work is understanding whether the **compression regime** should be handled differently from the rest of the market. This led to dedicated diagnostics, class balance checks, label studies, and a specialist backtest flow.
+---
 
-### Calibration and decision quality
-The work goes beyond raw probabilities by studying calibration behavior, bucket performance, confidence concentration, and how probabilities translate into realized trade outcomes.
-
-### Operational artifacts
-The project does not stop at notebooks or ad hoc prints. Outputs are persisted as **CSV summaries, image diagnostics, and dashboard files** so the pipeline can be reviewed, monitored, and operationalized.
-
-***
-
-## Repository structure
+## Project Structure
 
 ```text
-.
+Claudex/
+├── .env
 ├── data.duckdb
+├── requirements.txt
+│
+├── configs/
+│   ├── data_sources.yaml
+│   └── paper_trading.yaml
+│
 ├── src/
-│   └── analysis/
-│       ├── analysis_regime_band_script.py
-│       └── analyze_compression_vs_rest_v7.py
-├── output/
-│   ├── generate_model_dashboard.py
-│   └── model-insights/
-│       ├── build_model_insights_dashboard_v2.py
-│       ├── model-insights-dashboard.html
-│       └── model-insights-dashboard-v2.html
-├── skills/
-│   └── website-building/
-│       ├── informational.md
-│       ├── webapp.md
-│       └── game.md
-├── calibration_distribution_data_v7.csv
-├── confidence_bucket_performance_v7.csv
-├── distribution_comparison_metrics_v7.csv
-├── regime_*.csv
-├── compression_vs_rest_*.csv
-├── compression_specialist_*.csv
-└── *.jpg
+│   ├── data/
+│   │   ├── binance_client.py
+│   │   ├── build_canonical_market_table.py
+│   │   ├── build_market_quality_report.py
+│   │   ├── check_expected_hourly_coverage.py
+│   │   ├── duckdb_loader.py
+│   │   ├── ingest_ethusd.py
+│   │   ├── inspect_canonical_market.py
+│   │   └── validate_market_data.py
+│   │
+│   ├── features/
+│   │   ├── build_event_targets.py
+│   │   ├── build_feature_store.py
+│   │   ├── build_feature_store_v2.py
+│   │   ├── build_regime_table.py
+│   │   ├── build_selective_training_table.py
+│   │   ├── build_selective_training_table_v2.py
+│   │   ├── build_training_view.py
+│   │   ├── build_training_view_v2.py
+│   │   ├── validate_feature_store.py
+│   │   └── validate_feature_store_v2.py
+│   │
+│   ├── models/
+│   │   ├── compare_baselines_v1_v2.py
+│   │   ├── evaluate_baseline_models.py
+│   │   ├── train_baseline_models.py
+│   │   ├── train_baseline_models_v2.py
+│   │   └── train_selective_model_wfo.py
+│   │
+│   ├── training/
+│   │   ├── train_regime_specialist_models_v7.py
+│   │   └── tune_compression_threshold_v7.py
+│   │
+│   ├── analysis/
+│   │   ├── analysis_regime_band_script.py
+│   │   ├── analysis_script.py
+│   │   ├── analyze_all_predictions_v7.py
+│   │   ├── analyze_compression_vs_rest_v7.py
+│   │   ├── analyze_regime_feature_balance_v7.py
+│   │   └── initial_sanity_check.py
+│   │
+│   ├── backtest/
+│   │   ├── run_compression_specialist_backtest_v7.py
+│   │   ├── run_regime_specialist_backtest_v7.py
+│   │   ├── run_paper_trader_v4.py
+│   │   ├── run_paper_trader_v5.py
+│   │   ├── run_paper_trader_v6.py
+│   │   └── run_paper_trader_v7.py
+│   │
+│   ├── dashboard/
+│   │   ├── app.py
+│   │   └── generate_model_dashboard_v1.py
+│   │
+│   ├── paper_trading/
+│   │   └── run_paper_trading_shadow_v1.py
+│   │
+│   ├── trading/
+│   │   ├── paper_trade_hgb_v2.py
+│   │   └── paper_trade_hgb_v2_strict.py
+│   │
+│   ├── strategy/
+│   ├── agents/
+│   └── utils/
+│       └── healthcheck.py
+│
+├── models/
+│   ├── artifacts/
+│   │   ├── hist_gradient_boosting.joblib
+│   │   ├── hist_gradient_boosting_binary.joblib
+│   │   ├── hist_gradient_boosting_multiclass.joblib
+│   │   ├── logistic_regression.joblib
+│   │   ├── logistic_regression_binary.joblib
+│   │   └── logistic_regression_multiclass.joblib
+│   ├── registry/
+│   └── reports/
+│       ├── baseline_comparison_v1_v2.csv
+│       ├── baseline_model_summary.json
+│       ├── baseline_model_v2_summary.json
+│       ├── hist_gradient_boosting_walk_forward_metrics.csv
+│       ├── hist_gradient_boosting_binary_walk_forward_metrics.csv
+│       ├── hist_gradient_boosting_multiclass_walk_forward_metrics.csv
+│       ├── logistic_regression_walk_forward_metrics.csv
+│       ├── logistic_regression_binary_walk_forward_metrics.csv
+│       ├── logistic_regression_multiclass_walk_forward_metrics.csv
+│       ├── paper_trade_equity_curve.csv
+│       ├── paper_trade_summary.csv
+│       ├── paper_trade_trade_log.csv
+│       ├── paper_trade_v2_equity_curve.csv
+│       ├── paper_trade_v2_summary.csv
+│       └── paper_trade_v2_trade_log.csv
+│
+├── artifacts/
+│   ├── backtests/
+│   │   ├── regime_specialist_metrics_v7.csv
+│   │   └── regime_specialist_predictions_v7.csv
+│   ├── models/
+│   │   ├── ethusd_selective_model_v4.joblib
+│   │   └── ethusd_selective_model_wfo.joblib
+│   └── paper_trading/
+│       ├── compression_specialist_paper_metrics_v1.csv
+│       ├── compression_specialist_paper_runtime_v1.csv
+│       ├── compression_specialist_paper_signals_v1.csv
+│       └── compression_specialist_paper_trades_v1.csv
+│
+├── data/
+│   ├── market.duckdb
+│   ├── features/
+│   ├── predictions/
+│   │   ├── hist_gradient_boosting_binary_walk_forward_predictions.csv
+│   │   ├── hist_gradient_boosting_multiclass_walk_forward_predictions.csv
+│   │   ├── hist_gradient_boosting_walk_forward_predictions.csv
+│   │   ├── logistic_regression_binary_walk_forward_predictions.csv
+│   │   ├── logistic_regression_multiclass_walk_forward_predictions.csv
+│   │   └── logistic_regression_walk_forward_predictions.csv
+│   ├── processed/
+│   └── raw/
+│       └── binance/
+│           └── ethusdt_1h_2025-04-14_2026-04-14.parquet
+│
+├── logs/
+└── notebooks/
 ```
 
-> Note: some project configuration and source files referenced during development may live outside the currently exported artifact set. This README covers both the visible repository files and the delivered analytical outputs produced during the project.
+---
 
-***
+## Getting Started
 
-## Key components
+### Prerequisites
 
-### Data layer
-- **DuckDB database** (`data.duckdb`) used as the central local analytical store.
-- Supports repeatable querying of model outputs, regimes, labels, and derived evaluation tables.
+- Python 3.11+
+- Windows 10 or 11 with PowerShell
+- Binance API key for live data ingestion
 
-### Analysis scripts
-- `src/analysis/analysis_regime_band_script.py`  
-  Used for regime band and probability-oriented analysis.
-- `src/analysis/analyze_compression_vs_rest_v7.py`  
-  Focused analysis of compression regime versus all other regimes.
+### Installation
 
-### Dashboard/report generation
-- `output/generate_model_dashboard.py`  
-  Supporting script for building dashboard/report views.
-- `output/model-insights/build_model_insights_dashboard_v2.py`  
-  Script for generating a more polished model insights HTML dashboard.
-- `output/model-insights/model-insights-dashboard.html`  
-  Initial dashboard artifact.
-- `output/model-insights/model-insights-dashboard-v2.html`  
-  Improved presentation layer for current model insights.
+```powershell
+git clone https://github.com/your-username/claudex.git
+cd claudex
+python -m venv venv
+.\venv\Scripts\activate
+pip install -r requirements.txt
+copy .env.example .env
+```
 
-***
+After copying `.env`, open it and fill in your Binance API credentials and DuckDB paths.
 
-## Analytical tracks completed so far
+### Configuration
 
-### 1. Probability distribution analysis
-Artifacts in this track help answer whether model probabilities are informative, concentrated, or degenerate.
+Open `configs/data_sources.yaml` to set database paths and table names.
 
-Relevant outputs:
-- `calibration_distribution_data_v7.csv`
-- `probability_distribution_analysis_v7.jpg`
-- `probability_distribution_fixed_bucket_analysis_v7.jpg`
-- `distribution_comparison_metrics_v7.csv`
-- `confidence_bucket_performance_v7.csv`
-- `raw_probability_bucket_performance_v7.csv`
-- `calibrated_probability_bucket_performance_v7.csv`
+Open `configs/paper_trading.yaml` to configure fees, slippage, position sizing, and decision thresholds.
 
-What these are used for:
-- Compare raw vs calibrated probabilities.
-- Inspect bucket-level performance.
-- Understand confidence concentration near extremes.
-- Evaluate whether calibration improves interpretability or execution usefulness.
+---
 
-***
+## Pipeline Stages
 
-### 2. Regime diagnostics
-This track evaluates how predictions and outcomes vary by regime, rather than only at the global level.
+### Stage 1 — Data Ingestion
 
-Relevant outputs:
-- `all_prediction_diagnostics_v7.jpg`
-- `overall_actual_counts_v7.csv`
-- `overall_pred_counts_v7.csv`
-- `regime_actual_summary_v7.csv`
-- `regime_pred_summary_v7.csv`
-- `regime_confusion_summary_v7.csv`
-- `regime_raw_probability_bucket_summary_v7.csv`
-- `regime_cal_probability_bucket_summary_v7.csv`
-- `regime_side_probability_bucket_summary_v7.csv`
-- `regime_side_trade_counts_v7.csv`
-- `regime_side_probability_band_analysis_v7.jpg`
+```powershell
+python src/data/ingest_ethusd.py
+python src/data/build_canonical_market_table.py
+python src/data/validate_market_data.py
+```
 
-What these are used for:
-- Compare actual vs predicted behavior by regime.
-- Inspect class counts and confusion behavior.
-- Understand regime-specific confidence patterns.
-- Evaluate which regimes are easier or harder to model.
+Fetches one year of ETH/USD 1H OHLCV data from Binance and stores it as Parquet and in DuckDB.
 
-***
+**Output:** `data/raw/binance/ethusdt_1h_2025-04-14_2026-04-14.parquet`
 
-### 3. Class balance and label diagnostics
-This work checks whether imbalance or label scarcity may be driving poor downstream behavior in some regimes.
+---
 
-Relevant outputs:
-- `regime_class_counts_v7.csv`
-- `regime_event_counts_v7.csv`
-- `regime_feature_balance_v7.csv`
-- `regime_class_balance_diagnostics_v7.jpg`
+### Stage 2 — Feature Engineering
 
-What these are used for:
-- Measure positive/negative label distribution by regime.
-- Identify sparse or unstable regime slices.
-- Inform whether specialist models need reweighting, resampling, or different thresholds.
+```powershell
+python src/features/build_feature_store_v2.py
+python src/features/build_regime_table.py
+python src/features/build_event_targets.py
+python src/features/validate_feature_store_v2.py
+```
 
-***
+Builds 50+ technical indicators, assigns regime labels, and creates forward-looking event targets.
 
-### 4. Compression vs rest research
-This is one of the most important research branches in the repository. It isolates the compression regime as a dedicated modeling and trading question.
+**Output:** Feature store and regime tables written to `data.duckdb`
 
-Relevant outputs:
-- `compression_vs_rest_summary_v7.csv`
-- `compression_vs_rest_feature_balance_v7.csv`
-- `compression_vs_rest_label_summary_v7.csv`
-- `compression_vs_rest_diagnostics_v7.jpg`
+---
 
-What this track is used for:
-- Quantify whether compression differs materially from the rest of the data.
-- Check whether feature distributions shift in compression.
-- Inspect label behavior specific to compression.
-- Justify a specialist approach instead of a one-size-fits-all model.
+### Stage 3 — Baseline Model Training
 
-***
+```powershell
+python src/models/train_baseline_models_v2.py
+python src/models/evaluate_baseline_models.py
+python src/models/compare_baselines_v1_v2.py
+```
 
-### 5. Compression specialist backtest
-After identifying compression as a special case, the project moved into strategy-style testing of a dedicated compression specialist.
+Trains HistGradientBoosting and Logistic Regression baselines using walk-forward cross-validation across binary and multiclass formulations.
 
-Relevant outputs:
-- `compression_specialist_summary_v7.csv`
-- `compression_specialist_trades_v7.csv`
-- `compression_specialist_rejections_v7.csv`
-- `compression_specialist_threshold_sweep_v7.csv`
+**Output:** `models/artifacts/*.joblib`, `models/reports/*_walk_forward_metrics.csv`
 
-What this track is used for:
-- Evaluate trade selection quality under a compression-specific decision rule.
-- Measure realized performance, win rate, drawdown, and trade behavior.
-- Inspect rejected opportunities and threshold sensitivity.
-- Support walk-forward and robustness extensions.
+---
 
-***
+### Stage 4 — Regime Diagnostics
 
-## Notable workflow evolution
+```powershell
+python src/analysis/analyze_all_predictions_v7.py
+python src/analysis/analyze_compression_vs_rest_v7.py
+python src/analysis/analyze_regime_feature_balance_v7.py
+```
 
-This project has evolved through multiple practical stages:
+Analyzes model prediction behavior by regime. Identifies compression as the hardest regime and justifies a specialist approach.
 
-- **Initial analytical setup** for regime-aware inspection.
-- **Probability and calibration diagnostics** to understand output quality.
-- **Regime-level performance slicing** to avoid misleading aggregate metrics.
-- **Compression-vs-rest framing** to isolate the hardest regime.
-- **Specialist backtesting** to move from diagnosis into actionability.
-- **Threshold sweep analysis** to inspect decision sensitivity.
-- **Dashboard/report generation** to communicate current state clearly.
+**Output:** Regime summary CSVs and diagnostic JPG charts
 
-This progression matters because the project was not built as a single one-off script. It was built incrementally as a research system that became increasingly operational.
+---
 
-***
+### Stage 5 — Specialist Training and Threshold Tuning
 
-## Typical end-to-end workflow
+```powershell
+python src/training/train_regime_specialist_models_v7.py
+python src/training/tune_compression_threshold_v7.py
+```
 
-### Step 1: Query data and model outputs
-Use DuckDB-backed tables to load predictions, labels, and regime context.
+Trains compression-specific models with isotonic calibration and sweeps decision thresholds from 0.75 to 0.90.
 
-### Step 2: Run diagnostics
-Generate summaries and visual artifacts covering:
-- overall prediction behavior,
-- regime-level behavior,
-- class balance,
-- calibration and bucket performance.
+**Output:** Calibrated predictions and threshold sweep tables written to `data.duckdb`
 
-### Step 3: Investigate compression separately
-Run the compression-vs-rest analysis to confirm whether the regime deserves dedicated handling.
+---
 
-### Step 4: Backtest the compression specialist
-Evaluate trade outcomes, rejections, and threshold sensitivity from the specialist setup.
+### Stage 6 — Backtesting
 
-### Step 5: Publish insights
-Generate dashboard-style HTML views so the latest model state can be inspected without digging through raw files.
+```powershell
+python src/backtest/run_compression_specialist_backtest_v7.py
+python src/backtest/run_regime_specialist_backtest_v7.py
+```
 
-***
+Runs event-driven backtests with volatility-adjusted stop-loss, take-profit, fee and slippage deduction, and expanding walk-forward splits.
 
-## Artifact guide
+**Output:** `artifacts/backtests/regime_specialist_metrics_v7.csv`
 
-### CSV outputs
-CSV files are the main machine-readable outputs and are useful for:
-- additional SQL or pandas analysis,
-- dashboard feeding,
-- auditability,
-- sharing with teammates,
-- threshold and trade review.
+---
 
-### Image outputs
-JPG artifacts provide visual diagnostics for:
-- probability concentration,
-- calibration distribution,
-- regime class balance,
-- compression-vs-rest comparisons,
-- regime-side behavior.
+### Stage 7 — Paper Trading
 
-### HTML outputs
-The dashboard artifacts are intended for human-friendly monitoring and storytelling:
-- `model-insights-dashboard.html`
-- `model-insights-dashboard-v2.html`
+```powershell
+python src/backtest/run_paper_trader_v7.py
+```
 
-***
+Simulates live trading behavior including position sizing, sequential trade execution, and full equity tracking.
 
-## Why this repository is useful
+**Output:** `artifacts/paper_trading/compression_specialist_paper_trades_v1.csv`
 
-This repository is useful if you want to:
-- build a **regime-aware ML evaluation framework**,
-- move from raw model scores to **decision-aware analysis**,
-- compare **calibrated vs raw probabilities**,
-- isolate hard market conditions like **compression**,
-- produce **artifact-driven diagnostics** instead of ad hoc notebook outputs,
-- create a bridge from research outputs into an operational dashboard.
+---
 
-***
+### Stage 8 — Dashboard Reporting
 
-## Suggested future extensions
+```powershell
+python src/dashboard/generate_model_dashboard_v1.py
+```
 
-Good next steps for the project include:
+Generates an HTML insights dashboard with KPI cards, equity curve, trade diagnostics, and threshold analysis.
 
-- Add a fully automated **walk-forward evaluation** artifact set for the compression specialist.
-- Promote the dashboard into a **scheduled reporting layer** that refreshes after each pipeline run.
-- Add explicit **model registry/version metadata** for each artifact family.
-- Add **config-driven orchestration** for thresholds, fees, slippage, and holding periods.
-- Add **README-linked data dictionary** for all exported CSV fields.
-- Split `src/` into clearer modules such as `training/`, `analysis/`, `backtest/`, and `reporting/` if the codebase continues to grow.
+**Output:** HTML dashboard file ready for browser viewing
 
-***
+---
 
-## Working principles used in this project
+## Key Scripts
 
-- Prefer **diagnostics before optimization**.
-- Prefer **regime-aware slicing before aggregate conclusions**.
-- Prefer **persisted artifacts** over ephemeral notebook output.
-- Prefer **interpretable summaries** over opaque metric dumps.
-- Prefer **specialist handling** when one regime behaves materially differently from the rest.
+| Script | Purpose |
+|--------|---------|
+| `src/data/ingest_ethusd.py` | Binance data ingestion |
+| `src/features/build_feature_store_v2.py` | Feature engineering |
+| `src/features/build_regime_table.py` | Regime label generation |
+| `src/models/train_baseline_models_v2.py` | Baseline model training |
+| `src/training/train_regime_specialist_models_v7.py` | Compression specialist training |
+| `src/training/tune_compression_threshold_v7.py` | Threshold sweep and calibration |
+| `src/analysis/analyze_compression_vs_rest_v7.py` | Compression regime research |
+| `src/backtest/run_compression_specialist_backtest_v7.py` | Specialist backtest |
+| `src/backtest/run_regime_specialist_backtest_v7.py` | Full regime backtest |
+| `src/backtest/run_paper_trader_v7.py` | Paper trading simulation |
+| `src/dashboard/generate_model_dashboard_v1.py` | HTML dashboard generation |
 
-***
+---
 
-## Quick file highlights
+## Artifacts
 
-If you only want the most important outputs, start here:
+### backtests
 
-- `src/analysis/analyze_compression_vs_rest_v7.py`
-- `compression_vs_rest_summary_v7.csv`
-- `regime_confusion_summary_v7.csv`
-- `distribution_comparison_metrics_v7.csv`
-- `compression_specialist_summary_v7.csv`
-- `compression_specialist_threshold_sweep_v7.csv`
-- `output/model-insights/model-insights-dashboard-v2.html`
+| File | Description |
+|------|-------------|
+| `regime_specialist_metrics_v7.csv` | Per-regime strategy performance metrics |
+| `regime_specialist_predictions_v7.csv` | Raw model prediction outputs |
 
-***
+### paper_trading
 
-## Status
+| File | Description |
+|------|-------------|
+| `compression_specialist_paper_trades_v1.csv` | Executed paper trade log |
+| `compression_specialist_paper_metrics_v1.csv` | Performance summary |
+| `compression_specialist_paper_signals_v1.csv` | Signal generation log |
+| `compression_specialist_paper_runtime_v1.csv` | Runtime diagnostics |
 
-The repository currently represents a **working analytical foundation plus an insights presentation layer**. The main body of work completed so far covers:
-- regime diagnostics,
-- class balance analysis,
-- calibration distribution studies,
-- compression-vs-rest research,
-- compression specialist backtesting,
-- and HTML dashboard reporting.
+### models/reports
 
-It is well-positioned for the next phase: **robust walk-forward validation and scheduled insight delivery**.
+| File | Description |
+|------|-------------|
+| `*_walk_forward_metrics.csv` | OOS walk-forward results per model variant |
+| `paper_trade_equity_curve.csv` | Equity curve from paper trading |
+| `paper_trade_v2_equity_curve.csv` | Equity curve from paper trading v2 |
+| `baseline_comparison_v1_v2.csv` | Side-by-side baseline comparison |
+
+---
+
+## Data Layer
+
+### data.duckdb — main analytical store
+
+| Table | Description |
+|-------|-------------|
+| `ethusd_1h_market` | Canonical OHLCV |
+| `feature_store_v2` | 50+ technical indicators |
+| `regime_table` | Compression and expansion labels |
+| `ethusd_predictions_calibrated_v7` | Calibrated model outputs |
+| `compression_specialist_trades_v7` | Backtest trade results |
+| `compression_specialist_summary_v7` | Backtest summary |
+| `compression_specialist_threshold_sweep_v7` | Threshold sensitivity results |
+
+### data/market.duckdb — market data store
+
+| Table | Description |
+|-------|-------------|
+| `canonical_market` | Validated hourly OHLCV |
+| `market_quality_report` | Coverage and quality flags |
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Language | Python 3.11 |
+| Database | DuckDB |
+| ML Models | HistGradientBoosting, LogisticRegression |
+| Data Source | Binance REST API |
+| Storage | Parquet, DuckDB, Joblib |
+| Config | YAML |
+| Reporting | HTML, CSV |
+| Environment | Windows 11, PowerShell, venv |
+
+---
+
+## Research Findings
+
+### Compression is the hardest regime
+
+The compression regime contains 184 rows with a 2:1 negative-to-positive class imbalance (124 negative, 60 positive). Feature distributions in compression shift materially compared to the rest of the data, justifying specialist treatment.
+
+### Calibration behavior
+
+Raw model probabilities cluster near 1.0 for most predictions. Isotonic calibration improves interpretability and enables reliable threshold-based filtering for trade selection.
+
+### Walk-forward results
+
+Expanding walk-forward windows across HistGradientBoosting and Logistic Regression baselines confirm that OOS performance is directionally consistent. Full per-window breakdowns are in `models/reports/`.
+
+### Compression specialist backtest
+
+At threshold 0.18 the specialist generates 18 trades with a 50% win rate, -0.69% total return, and -4.97% maximum drawdown. Threshold sweep from 0.75 to 0.90 shows stable trade count behavior.
+
+---
+
+## Roadmap
+
+- [x] Data ingestion and validation
+- [x] Feature store and regime table
+- [x] Baseline model training with walk-forward
+- [x] Regime diagnostics and compression-vs-rest research
+- [x] Compression specialist training and calibration
+- [x] Threshold sweep and sensitivity analysis
+- [x] Compression specialist backtest
+- [x] Paper trading simulation
+- [x] HTML dashboard reporting
+- [ ] Walk-forward compression specialist robustness testing
+- [ ] Windows Task Scheduler automated pipeline
+- [ ] Live dashboard refresh after each scheduled run
+- [ ] Multi-asset expansion to BTC and SOL
+- [ ] Model drift detection and alerting
+
+---
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+---
+
+> Built incrementally from scratch. Every artifact earned, not scaffolded.
