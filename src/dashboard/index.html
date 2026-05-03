@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="refresh" content="3600">
+    <title>Claudex Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0d1117; color: #c9d1d9; }
+        .header { background: #161b22; padding: 20px 30px; border-bottom: 1px solid #30363d; }
+        .header h1 { color: #58a6ff; font-size: 1.6rem; }
+        .header p { color: #8b949e; font-size: 0.85rem; margin-top: 4px; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+                     gap: 16px; padding: 24px 30px; }
+        .kpi { background: #161b22; border: 1px solid #30363d; border-radius: 8px;
+                padding: 16px; text-align: center; }
+        .kpi .value { font-size: 1.8rem; font-weight: 700; color: #58a6ff; }
+        .kpi .label { font-size: 0.75rem; color: #8b949e; margin-top: 4px; text-transform: uppercase; }
+        .kpi.green .value { color: #3fb950; }
+        .kpi.red .value   { color: #f85149; }
+        .kpi.yellow .value { color: #d29922; }
+        .section { padding: 0 30px 30px; }
+        .section h2 { color: #58a6ff; font-size: 1rem; margin-bottom: 12px;
+                       padding-bottom: 6px; border-bottom: 1px solid #30363d; }
+        .chart-box { background: #161b22; border: 1px solid #30363d;
+                      border-radius: 8px; padding: 16px; height: 260px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+        th { background: #21262d; color: #8b949e; padding: 8px 10px;
+              text-align: left; font-weight: 500; }
+        td { padding: 7px 10px; border-bottom: 1px solid #21262d; }
+        tr:hover { background: #161b22; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 12px;
+                  font-size: 0.75rem; font-weight: 600; }
+        .badge.green { background: #1a3a2a; color: #3fb950; }
+        .badge.blue  { background: #1a2a3a; color: #58a6ff; }
+        .wf-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .wf-card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 14px; }
+        .wf-card .wf-val { font-size: 1.3rem; font-weight: 700; color: #3fb950; }
+        .wf-card .wf-lbl { font-size: 0.72rem; color: #8b949e; margin-top: 2px; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>⚡ Claudex — Live Trading Dashboard</h1>
+    <p>Generated: 2026-05-03 13:44:50 UTC &nbsp;|&nbsp; Run ID: 1659b378 &nbsp;|&nbsp;
+       Active Model: compression_specialist_v7.joblib &nbsp;|&nbsp; Band: ge_0.78</p>
+</div>
+
+<!-- KPI Cards -->
+<div class="kpi-grid">
+    <div class="kpi red">
+        <div class="value">-0.32%</div>
+        <div class="label">Total Return</div>
+    </div>
+    <div class="kpi green">
+        <div class="value">66.0%</div>
+        <div class="label">Win Rate</div>
+    </div>
+    <div class="kpi">
+        <div class="value">50</div>
+        <div class="label">Total Trades</div>
+    </div>
+    <div class="kpi blue">
+        <div class="value">2</div>
+        <div class="label">Signals Emitted</div>
+    </div>
+    <div class="kpi green">
+        <div class="value">1.74</div>
+        <div class="label">WF Profit Factor</div>
+    </div>
+    <div class="kpi yellow">
+        <div class="value">10</div>
+        <div class="label">Drift Events</div>
+    </div>
+    <div class="kpi">
+        <div class="value">2026-05-03 19:05</div>
+        <div class="label">Last Run</div>
+    </div>
+</div>
+
+<!-- Walk-Forward Validated Edge -->
+<div class="section">
+    <h2>Walk-Forward Validated Edge (ge_0.78 Band)</h2>
+    <div class="wf-grid">
+        <div class="wf-card">
+            <div class="wf-val">2.15%</div>
+            <div class="wf-lbl">OOS Total Return</div>
+        </div>
+        <div class="wf-card">
+            <div class="wf-val">62.5%</div>
+            <div class="wf-lbl">OOS Win Rate</div>
+        </div>
+        <div class="wf-card">
+            <div class="wf-val">1.735</div>
+            <div class="wf-lbl">OOS Profit Factor</div>
+        </div>
+    </div>
+</div>
+
+<!-- Equity Curve -->
+<div class="section">
+    <h2>Equity Curve</h2>
+    <div class="chart-box">
+        <canvas id="equityChart"></canvas>
+    </div>
+</div>
+
+<!-- Recent Trades -->
+<div class="section">
+    <h2>Recent Trades (Last 20)</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Entry Time</th><th>Entry $</th><th>Exit $</th>
+                <th>Confidence</th><th>Exit Reason</th>
+                <th>Net Return</th><th>PnL $</th>
+            </tr>
+        </thead>
+        <tbody>
+                <tr>
+                    <td>2026-01-25 17:30</td>
+                    <td>2942.38</td>
+                    <td>2893.7</td>
+                    <td>0.802</td>
+                    <td>stop_loss</td>
+                    <td>❌ -1.764%</td>
+                    <td>$-1093.94</td>
+                </tr>
+                <tr>
+                    <td>2026-01-25 17:30</td>
+                    <td>2942.38</td>
+                    <td>2893.7</td>
+                    <td>0.802</td>
+                    <td>stop_loss</td>
+                    <td>❌ -1.764%</td>
+                    <td>$-1093.94</td>
+                </tr>
+                <tr>
+                    <td>2026-01-25 17:30</td>
+                    <td>2942.38</td>
+                    <td>2893.7</td>
+                    <td>0.802</td>
+                    <td>stop_loss</td>
+                    <td>❌ -1.764%</td>
+                    <td>$-1093.94</td>
+                </tr>
+                <tr>
+                    <td>2026-01-25 17:30</td>
+                    <td>2942.38</td>
+                    <td>2893.7</td>
+                    <td>0.802</td>
+                    <td>stop_loss</td>
+                    <td>❌ -1.764%</td>
+                    <td>$-1093.94</td>
+                </tr>
+                <tr>
+                    <td>2026-01-25 17:30</td>
+                    <td>2942.38</td>
+                    <td>2893.7</td>
+                    <td>0.802</td>
+                    <td>stop_loss</td>
+                    <td>❌ -1.764%</td>
+                    <td>$-1093.94</td>
+                </tr>
+                <tr>
+                    <td>2026-01-25 17:30</td>
+                    <td>2942.38</td>
+                    <td>2893.7</td>
+                    <td>0.802</td>
+                    <td>stop_loss</td>
+                    <td>❌ -1.764%</td>
+                    <td>$-1093.94</td>
+                </tr>
+                <tr>
+                    <td>2026-01-25 17:30</td>
+                    <td>2942.38</td>
+                    <td>2893.7</td>
+                    <td>0.802</td>
+                    <td>stop_loss</td>
+                    <td>❌ -1.764%</td>
+                    <td>$-1093.94</td>
+                </tr>
+                <tr>
+                    <td>2026-01-25 17:30</td>
+                    <td>2942.38</td>
+                    <td>2893.7</td>
+                    <td>0.802</td>
+                    <td>stop_loss</td>
+                    <td>❌ -1.764%</td>
+                    <td>$-1093.94</td>
+                </tr>
+                <tr>
+                    <td>2026-01-25 17:30</td>
+                    <td>2942.38</td>
+                    <td>2893.7</td>
+                    <td>0.802</td>
+                    <td>stop_loss</td>
+                    <td>❌ -1.764%</td>
+                    <td>$-1093.94</td>
+                </tr>
+                <tr>
+                    <td>2026-01-25 17:30</td>
+                    <td>2942.38</td>
+                    <td>2893.7</td>
+                    <td>0.802</td>
+                    <td>stop_loss</td>
+                    <td>❌ -1.764%</td>
+                    <td>$-1093.94</td>
+                </tr>
+                <tr>
+                    <td>2026-01-25 17:30</td>
+                    <td>2942.38</td>
+                    <td>2893.7</td>
+                    <td>0.802</td>
+                    <td>stop_loss</td>
+                    <td>❌ -1.764%</td>
+                    <td>$-1093.94</td>
+                </tr>
+                <tr>
+                    <td>2026-01-12 04:30</td>
+                    <td>3123.45</td>
+                    <td>3141.5</td>
+                    <td>0.901</td>
+                    <td>time_exit</td>
+                    <td>✅ 0.468%</td>
+                    <td>$364.6</td>
+                </tr>
+                <tr>
+                    <td>2026-01-12 04:30</td>
+                    <td>3123.45</td>
+                    <td>3141.5</td>
+                    <td>0.901</td>
+                    <td>time_exit</td>
+                    <td>✅ 0.468%</td>
+                    <td>$364.6</td>
+                </tr>
+                <tr>
+                    <td>2026-01-12 04:30</td>
+                    <td>3123.45</td>
+                    <td>3141.5</td>
+                    <td>0.901</td>
+                    <td>time_exit</td>
+                    <td>✅ 0.468%</td>
+                    <td>$364.6</td>
+                </tr>
+                <tr>
+                    <td>2026-01-12 04:30</td>
+                    <td>3123.45</td>
+                    <td>3141.5</td>
+                    <td>0.901</td>
+                    <td>time_exit</td>
+                    <td>✅ 0.468%</td>
+                    <td>$364.6</td>
+                </tr>
+                <tr>
+                    <td>2026-01-12 04:30</td>
+                    <td>3123.45</td>
+                    <td>3141.5</td>
+                    <td>0.901</td>
+                    <td>time_exit</td>
+                    <td>✅ 0.468%</td>
+                    <td>$364.6</td>
+                </tr>
+                <tr>
+                    <td>2026-01-12 04:30</td>
+                    <td>3123.45</td>
+                    <td>3141.5</td>
+                    <td>0.901</td>
+                    <td>time_exit</td>
+                    <td>✅ 0.468%</td>
+                    <td>$364.6</td>
+                </tr>
+                <tr>
+                    <td>2026-01-12 04:30</td>
+                    <td>3123.45</td>
+                    <td>3141.5</td>
+                    <td>0.901</td>
+                    <td>time_exit</td>
+                    <td>✅ 0.468%</td>
+                    <td>$364.6</td>
+                </tr>
+                <tr>
+                    <td>2026-01-12 04:30</td>
+                    <td>3123.45</td>
+                    <td>3141.5</td>
+                    <td>0.901</td>
+                    <td>time_exit</td>
+                    <td>✅ 0.468%</td>
+                    <td>$364.6</td>
+                </tr>
+                <tr>
+                    <td>2026-01-12 04:30</td>
+                    <td>3123.45</td>
+                    <td>3141.5</td>
+                    <td>0.901</td>
+                    <td>time_exit</td>
+                    <td>✅ 0.468%</td>
+                    <td>$364.6</td>
+                </tr></tbody>
+    </table>
+</div>
+
+<!-- Run Log -->
+<div class="section">
+    <h2>Orchestrator Run Log (Last 10)</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Started (UTC)</th><th>Run ID</th><th>Status</th>
+                <th>New Rows</th><th>Drift</th><th>Retrained</th><th>Signals</th>
+            </tr>
+        </thead>
+        <tbody>
+                <tr>
+                    <td>2026-05-03 19:05:37</td>
+                    <td>3f858d41</td>
+                    <td>🟢 OK</td>
+                    <td>0</td>
+                    <td>⚠️ YES</td>
+                    <td>🔄 YES</td>
+                    <td>0</td>
+                </tr>
+                <tr>
+                    <td>2026-05-03 19:04:09</td>
+                    <td>1b50f70c</td>
+                    <td>🟢 OK</td>
+                    <td>0</td>
+                    <td>⚠️ YES</td>
+                    <td>No</td>
+                    <td>0</td>
+                </tr>
+                <tr>
+                    <td>2026-05-03 18:57:46</td>
+                    <td>125262f5</td>
+                    <td>🟢 OK</td>
+                    <td>0</td>
+                    <td>⚠️ YES</td>
+                    <td>No</td>
+                    <td>0</td>
+                </tr>
+                <tr>
+                    <td>2026-05-03 18:36:59</td>
+                    <td>d0ef7a8c</td>
+                    <td>🟢 OK</td>
+                    <td>21</td>
+                    <td>⚠️ YES</td>
+                    <td>No</td>
+                    <td>0</td>
+                </tr>
+                <tr>
+                    <td>2026-05-03 18:35:31</td>
+                    <td>1792bbb1</td>
+                    <td>🟢 OK</td>
+                    <td>42</td>
+                    <td>⚠️ YES</td>
+                    <td>No</td>
+                    <td>0</td>
+                </tr>
+                <tr>
+                    <td>2026-05-03 18:34:07</td>
+                    <td>8bbe19d1</td>
+                    <td>🟢 OK</td>
+                    <td>42</td>
+                    <td>⚠️ YES</td>
+                    <td>No</td>
+                    <td>0</td>
+                </tr>
+                <tr>
+                    <td>2026-05-03 18:08:30</td>
+                    <td>28e2b01c</td>
+                    <td>🟢 OK</td>
+                    <td>42</td>
+                    <td>⚠️ YES</td>
+                    <td>No</td>
+                    <td>0</td>
+                </tr>
+                <tr>
+                    <td>2026-05-03 18:06:07</td>
+                    <td>0296c159</td>
+                    <td>🟢 OK</td>
+                    <td>42</td>
+                    <td>⚠️ YES</td>
+                    <td>No</td>
+                    <td>0</td>
+                </tr>
+                <tr>
+                    <td>2026-05-03 18:04:37</td>
+                    <td>96e3b643</td>
+                    <td>🟢 OK</td>
+                    <td>42</td>
+                    <td>⚠️ YES</td>
+                    <td>No</td>
+                    <td>0</td>
+                </tr>
+                <tr>
+                    <td>2026-05-03 18:02:30</td>
+                    <td>9213ecdc</td>
+                    <td>🟢 OK</td>
+                    <td>42</td>
+                    <td>⚠️ YES</td>
+                    <td>No</td>
+                    <td>0</td>
+                </tr></tbody>
+    </table>
+</div>
+
+<script>
+const labels = [['2025-12-28 15:30', -2.47],['2025-12-28 15:30', -2.47],['2025-12-28 15:30', -2.47],['2025-12-28 15:30', -2.47],['2025-12-28 15:30', -2.47],['2025-12-28 15:30', -2.47],['2026-01-02 14:30', -0.61],['2026-01-02 14:30', -0.61],['2026-01-02 14:30', -0.61],['2026-01-02 14:30', -0.61],['2026-01-02 14:30', -0.61],['2026-01-02 14:30', -0.61],['2026-01-02 14:30', -0.61],['2026-01-02 14:30', -0.61],['2026-01-02 14:30', -0.61],['2026-01-02 14:30', -0.61],['2026-01-02 14:30', -0.61],['2026-01-04 12:30', 0.41],['2026-01-04 12:30', 0.41],['2026-01-04 12:30', 0.41],['2026-01-04 12:30', 0.41],['2026-01-04 12:30', 0.41],['2026-01-04 12:30', 0.41],['2026-01-04 12:30', 0.41],['2026-01-04 12:30', 0.41],['2026-01-04 12:30', 0.41],['2026-01-04 12:30', 0.41],['2026-01-04 12:30', 0.41],['2026-01-12 04:30', 0.77],['2026-01-12 04:30', 0.77],['2026-01-12 04:30', 0.77],['2026-01-12 04:30', 0.77],['2026-01-12 04:30', 0.77],['2026-01-12 04:30', 0.77],['2026-01-12 04:30', 0.77],['2026-01-12 04:30', 0.77],['2026-01-12 04:30', 0.77],['2026-01-12 04:30', 0.77],['2026-01-12 04:30', 0.77],['2026-01-25 17:30', -0.32],['2026-01-25 17:30', -0.32],['2026-01-25 17:30', -0.32],['2026-01-25 17:30', -0.32],['2026-01-25 17:30', -0.32],['2026-01-25 17:30', -0.32],['2026-01-25 17:30', -0.32],['2026-01-25 17:30', -0.32],['2026-01-25 17:30', -0.32],['2026-01-25 17:30', -0.32],['2026-01-25 17:30', -0.32],].map(r => r[0]);
+const data   = [['2025-12-28 15:30', -2.47],['2025-12-28 15:30', -2.47],['2025-12-28 15:30', -2.47],['2025-12-28 15:30', -2.47],['2025-12-28 15:30', -2.47],['2025-12-28 15:30', -2.47],['2026-01-02 14:30', -0.61],['2026-01-02 14:30', -0.61],['2026-01-02 14:30', -0.61],['2026-01-02 14:30', -0.61],['2026-01-02 14:30', -0.61],['2026-01-02 14:30', -0.61],['2026-01-02 14:30', -0.61],['2026-01-02 14:30', -0.61],['2026-01-02 14:30', -0.61],['2026-01-02 14:30', -0.61],['2026-01-02 14:30', -0.61],['2026-01-04 12:30', 0.41],['2026-01-04 12:30', 0.41],['2026-01-04 12:30', 0.41],['2026-01-04 12:30', 0.41],['2026-01-04 12:30', 0.41],['2026-01-04 12:30', 0.41],['2026-01-04 12:30', 0.41],['2026-01-04 12:30', 0.41],['2026-01-04 12:30', 0.41],['2026-01-04 12:30', 0.41],['2026-01-04 12:30', 0.41],['2026-01-12 04:30', 0.77],['2026-01-12 04:30', 0.77],['2026-01-12 04:30', 0.77],['2026-01-12 04:30', 0.77],['2026-01-12 04:30', 0.77],['2026-01-12 04:30', 0.77],['2026-01-12 04:30', 0.77],['2026-01-12 04:30', 0.77],['2026-01-12 04:30', 0.77],['2026-01-12 04:30', 0.77],['2026-01-12 04:30', 0.77],['2026-01-25 17:30', -0.32],['2026-01-25 17:30', -0.32],['2026-01-25 17:30', -0.32],['2026-01-25 17:30', -0.32],['2026-01-25 17:30', -0.32],['2026-01-25 17:30', -0.32],['2026-01-25 17:30', -0.32],['2026-01-25 17:30', -0.32],['2026-01-25 17:30', -0.32],['2026-01-25 17:30', -0.32],['2026-01-25 17:30', -0.32],].map(r => r[1]);
+new Chart(document.getElementById('equityChart'), {
+    type: 'line',
+    data: {
+        labels: labels,
+        datasets: [{
+            label: 'Equity Return %',
+            data: data,
+            borderColor: '#58a6ff',
+            backgroundColor: 'rgba(88,166,255,0.08)',
+            borderWidth: 2,
+            pointRadius: 2,
+            fill: true,
+            tension: 0.3,
+        }]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            x: { ticks: { color: '#8b949e', maxTicksLimit: 8 },
+                  grid: { color: '#21262d' } },
+            y: { ticks: { color: '#8b949e' },
+                  grid: { color: '#21262d' } }
+        }
+    }
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,156 @@
+# =============================================================================
+# Claudex Agent Configuration
+# Single source of truth for all agent settings, thresholds, and paths
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Project Paths
+# -----------------------------------------------------------------------------
+paths:
+  project_root: "C:/Users/ASUS/Downloads/Claudex"
+  db_path: "data/market.duckdb"
+  model_dir: "models/artifacts"
+  artifacts_dir: "artifacts"
+  logs_dir: "logs"
+  dashboard_dir: "src/dashboard"
+  configs_dir: "configs"
+
+# -----------------------------------------------------------------------------
+# DuckDB Tables
+# -----------------------------------------------------------------------------
+tables:
+  # Existing tables (already built)
+  canonical_market: "ethusd_1h_market"
+  feature_store: "feature_store_v2"
+  regime_table: "regime_table"
+  predictions: "ethusd_predictions_calibrated_v7"
+  compression_trades: "compression_specialist_band_walk_forward_trades_v7"
+  compression_summary: "compression_specialist_band_walk_forward_summary_v7"
+  compression_selected: "compression_specialist_band_walk_forward_selected_v7"
+
+  # New tables (created in M5)
+  run_log: "run_log"
+  agent_step_log: "agent_step_log"
+  signal_log: "signal_log"
+  drift_log: "drift_log"
+  model_registry: "model_registry"
+
+# -----------------------------------------------------------------------------
+# Data Agent
+# -----------------------------------------------------------------------------
+data_agent:
+  symbol: "ETHUSDT"
+  interval: "1h"
+  binance_base_url: "https://api.binance.com"
+  lookback_bars: 48           # fetch last 48 bars on each run to ensure no gaps
+  max_gap_hours: 2            # alert if gap in candles exceeds 2 hours
+  enabled: true
+
+# -----------------------------------------------------------------------------
+# Feature Agent
+# -----------------------------------------------------------------------------
+feature_agent:
+  incremental: true           # only rebuild features for new rows
+  vol_window: 20
+  regime_lookback: 50
+  enabled: true
+
+# -----------------------------------------------------------------------------
+# Drift Checker
+# -----------------------------------------------------------------------------
+drift_checker:
+  baseline_profit_factor: 1.735     # ge_0.78 band walk-forward OOS result
+  baseline_win_rate: 0.625          # ge_0.78 band walk-forward OOS result
+  baseline_oos_return: 0.021479     # ge_0.78 band walk-forward OOS result
+  evaluation_window_rows: 126       # same as walk-forward test_rows
+  min_trades_for_drift_check: 5     # need at least 5 recent trades to evaluate
+  drift_pf_threshold: 0.90          # if current PF drops below 90% of baseline -> drift
+  drift_winrate_threshold: 0.50     # if win rate drops below 50% -> drift
+  enabled: true
+
+# -----------------------------------------------------------------------------
+# Retrain Subagent
+# -----------------------------------------------------------------------------
+retrain_subagent:
+  model_path: "models/artifacts/hist_gradient_boosting_binary.joblib"
+  backup_model_path: "models/artifacts/hist_gradient_boosting_binary_backup.joblib"
+  min_rows_to_retrain: 500          # need at least 500 rows before retraining
+  promotion_min_pf: 1.20            # new model must have PF > 1.20 to be promoted
+  promotion_min_oos_return: 0.005   # new model must have OOS return > 0.5%
+  walk_forward_min_train: 500
+  walk_forward_test_rows: 126
+  enabled: true
+
+# -----------------------------------------------------------------------------
+# Prediction Agent
+# -----------------------------------------------------------------------------
+prediction_agent:
+  model_path: "models/artifacts/hist_gradient_boosting_binary.joblib"
+  calibration_method: "isotonic"
+  prediction_window_rows: 48        # generate predictions on latest 48 rows
+  enabled: true
+
+# -----------------------------------------------------------------------------
+# Paper Trade Agent
+# -----------------------------------------------------------------------------
+paper_trade_agent:
+  band_name: "ge_0.78"
+  band_min: 0.78
+  band_max: null
+  fee_bps: 4.0
+  slippage_bps: 3.0
+  initial_equity: 100000.0
+  risk_pct: 0.01
+  stop_vol_mult: 2.0
+  rr_multiple: 2.0
+  max_hold_bars: 12
+  enabled: true
+
+# -----------------------------------------------------------------------------
+# Signal Agent
+# -----------------------------------------------------------------------------
+signal_agent:
+  threshold: 0.85
+  email:
+    enabled: true
+    smtp_host: smtp.gmail.com
+    smtp_port: 465
+    sender: aditya027patil@gmail.com
+    app_password: "tror nfhs ngvs gloh"   # replace after revoking old one
+    recipient: aditya027patil@gmail.com
+  toast:
+    enabled: true
+    duration: 10
+
+# -----------------------------------------------------------------------------
+# Dashboard Agent
+# -----------------------------------------------------------------------------
+dashboard_agent:
+  output_path: "src/dashboard/index.html"
+  auto_open: false                   # set true to open browser after generation
+  lookback_trades: 50                # show last 50 trades on dashboard
+  enabled: true
+
+# -----------------------------------------------------------------------------
+# Run Logger
+# -----------------------------------------------------------------------------
+run_logger:
+  log_table: "run_log"
+  step_log_table: "agent_step_log"
+  retention_days: 90                 # keep run logs for 90 days
+
+# -----------------------------------------------------------------------------
+# Orchestrator
+# -----------------------------------------------------------------------------
+orchestrator:
+  abort_on_step_failure: true        # if any step fails, abort remaining steps
+  steps:
+    - data_agent
+    - feature_agent
+    - drift_checker
+    - prediction_agent
+    - paper_trade_agent
+    - signal_agent
+    - dashboard_agent
+    - run_logger
+  schedule_hint: "hourly"            # documentation only, actual schedule in Task Scheduler
