@@ -1,2 +1,0 @@
-strategy_name,last_processed_open_time,current_equity,open_trade_id,open_entry_time,open_entry_price,open_fill_entry,open_pred_proba,open_pred_label,open_actual_label,open_vol20,open_stop_pct,open_take_profit_pct,open_stop_price,open_take_profit_price,open_qty,open_bars_held,updated_at
-compression_specialist_paper_v1,2026-02-11 14:30:00,99678.92132498209,,,,,,,,,,,,,,0,2026-04-18 16:26:55.266437

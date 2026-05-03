@@ -1,2 +1,0 @@
-strategy_name,band_name,band_min,band_max,threshold,train_rows,test_rows,trades,win_rate,avg_net_return,total_net_return,max_drawdown,final_equity,rejections,avg_specialist_pred_proba,avg_bars_held,take_profit_count,stop_loss_count,time_exit_count,profit_factor,expectancy_dollars
-compression_specialist_v7,ge_0.78,0.78,,0.78,0,1265,13,0.5384615384615384,0.002543694436396496,-0.003210786750179051,-0.03275330466083115,99678.92132498209,1142,0.8953607784110488,8.461538461538462,1,5,7,0.945712131716354,-24.69835961676359
