@@ -1,440 +1,866 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="refresh" content="3600">
     <title>Claudex Dashboard</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', sans-serif; background: #0d1117; color: #c9d1d9; }
-        .header { background: #161b22; padding: 20px 30px; border-bottom: 1px solid #30363d; }
-        .header h1 { color: #58a6ff; font-size: 1.6rem; }
-        .header p { color: #8b949e; font-size: 0.85rem; margin-top: 4px; }
-        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-                     gap: 16px; padding: 24px 30px; }
-        .kpi { background: #161b22; border: 1px solid #30363d; border-radius: 8px;
-                padding: 16px; text-align: center; }
-        .kpi .value { font-size: 1.8rem; font-weight: 700; color: #58a6ff; }
-        .kpi .label { font-size: 0.75rem; color: #8b949e; margin-top: 4px; text-transform: uppercase; }
-        .kpi.green .value { color: #3fb950; }
-        .kpi.red .value   { color: #f85149; }
-        .kpi.yellow .value { color: #d29922; }
-        .section { padding: 0 30px 30px; }
-        .section h2 { color: #58a6ff; font-size: 1rem; margin-bottom: 12px;
-                       padding-bottom: 6px; border-bottom: 1px solid #30363d; }
-        .chart-box { background: #161b22; border: 1px solid #30363d;
-                      border-radius: 8px; padding: 16px; height: 260px; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
-        th { background: #21262d; color: #8b949e; padding: 8px 10px;
-              text-align: left; font-weight: 500; }
-        td { padding: 7px 10px; border-bottom: 1px solid #21262d; }
-        tr:hover { background: #161b22; }
-        .badge { display: inline-block; padding: 2px 8px; border-radius: 12px;
-                  font-size: 0.75rem; font-weight: 600; }
-        .badge.green { background: #1a3a2a; color: #3fb950; }
-        .badge.blue  { background: #1a2a3a; color: #58a6ff; }
-        .wf-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-        .wf-card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 14px; }
-        .wf-card .wf-val { font-size: 1.3rem; font-weight: 700; color: #3fb950; }
-        .wf-card .wf-lbl { font-size: 0.72rem; color: #8b949e; margin-top: 2px; }
+        :root {
+            --bg:        #05070b;
+            --surface:   #0b0f16;
+            --surface-2: #111827;
+            --surface-3: #111827;
+            --border:    rgba(255,255,255,0.08);
+            --border-2:  rgba(255,255,255,0.04);
+            --text:      #e5e7eb;
+            --muted:     #9ca3af;
+            --faint:     #4b5563;
+            --blue:      #60a5fa;
+            --green:     #34d399;
+            --red:       #f97373;
+            --yellow:    #fbbf24;
+            --purple:    #a78bfa;
+            --font-body: 'Inter', -apple-system, system-ui, sans-serif;
+            --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+            --radius:    7px;
+            --radius-lg: 11px;
+        }
+        [data-theme="light"] {
+            --bg:        #f5f5f4;
+            --surface:   #ffffff;
+            --surface-2: #f3f3f2;
+            --surface-3: #e8e8e5;
+            --border:    rgba(15,23,42,0.12);
+            --border-2:  rgba(15,23,42,0.06);
+            --text:      #111827;
+            --muted:     #6b7280;
+            --faint:     #d1d5db;
+            --blue:      #2563eb;
+            --green:     #059669;
+            --red:       #dc2626;
+            --yellow:    #d97706;
+            --purple:    #7c3aed;
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: var(--font-body);
+            background: radial-gradient(circle at top, #111827 0, var(--bg) 55%);
+            color: var(--text);
+            min-height: 100vh;
+        }
+        .app {
+            max-width: 1180px;
+            margin: 16px auto 32px auto;
+            padding: 0 16px 32px 16px;
+        }
+        .header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 14px 18px;
+            border-radius: var(--radius-lg);
+            background: linear-gradient(120deg, rgba(96,165,250,0.13), rgba(16,185,129,0.05));
+            border: 1px solid rgba(148,163,184,0.3);
+            box-shadow: 0 18px 40px rgba(15,23,42,0.45);
+            margin-bottom: 18px;
+        }
+        .header-left h1 {
+            font-size: 1.15rem;
+            letter-spacing: 0.04em;
+        }
+        .header-left p {
+            margin-top: 4px;
+            font-size: 0.75rem;
+            color: var(--muted);
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .model-badge {
+            font-size: 0.72rem;
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: rgba(15,23,42,0.75);
+            border: 1px solid rgba(148,163,184,0.5);
+        }
+        .status-label {
+            font-size: 0.72rem;
+            color: var(--muted);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .status-dot {
+            width: 7px; height: 7px; border-radius: 999px;
+            background: var(--green);
+            box-shadow: 0 0 8px rgba(34,197,94,0.9);
+            animation: pulse 1.4s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.9; }
+            50% { transform: scale(1.6); opacity: 0.1; }
+            100% { transform: scale(1); opacity: 0.9; }
+        }
+        .theme-toggle {
+            background: rgba(15,23,42,0.7);
+            border: 1px solid rgba(148,163,184,0.45);
+            border-radius: 999px;
+            width: 30px; height: 30px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            color: var(--muted);
+            transition: background 150ms, color 150ms, transform 150ms;
+        }
+        .theme-toggle:hover { background: rgba(15,23,42,1); color: var(--text); transform: translateY(-1px); }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 2fr 1.6fr;
+            gap: 16px;
+        }
+        @media (max-width: 900px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+
+        .kpi-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .kpi {
+            flex: 1 1 140px;
+            min-width: 120px;
+            padding: 10px 12px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            background: linear-gradient(135deg, rgba(15,23,42,0.96), rgba(15,23,42,0.8));
+            position: relative;
+            overflow: hidden;
+        }
+        .kpi::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at top left, rgba(96,165,250,0.16), transparent 55%);
+            opacity: 0;
+            transition: opacity 180ms ease-out;
+        }
+        .kpi:hover::after { opacity: 1; }
+        .kpi-value {
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+        .kpi-label {
+            margin-top: 2px;
+            font-size: 0.7rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .tab-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .tab-card {
+            position: relative;
+            flex: 1 1 0;
+            padding: 10px 11px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            background: var(--surface);
+            cursor: default;
+            transition: transform 140ms ease-out, box-shadow 140ms ease-out, border-color 140ms ease-out;
+        }
+        .tab-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(15,23,42,0.55);
+            border-color: rgba(96,165,250,0.8);
+        }
+        .tab-title {
+            font-size: 0.78rem;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+        .tab-sub {
+            font-size: 0.72rem;
+            color: var(--muted);
+        }
+        .tab-tooltip {
+            position: absolute;
+            z-index: 10;
+            left: 50%;
+            top: 100%;
+            transform: translate(-50%, 6px);
+            background: rgba(15,23,42,0.97);
+            color: var(--text);
+            border-radius: 6px;
+            padding: 8px 10px;
+            font-size: 0.7rem;
+            line-height: 1.4;
+            width: 220px;
+            border: 1px solid rgba(148,163,184,0.5);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 150ms ease-out, transform 150ms ease-out;
+        }
+        .tab-card:hover .tab-tooltip {
+            opacity: 1;
+            transform: translate(-50%, 0);
+        }
+
+        .panel {
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            background: var(--surface);
+            padding: 12px 14px;
+            margin-bottom: 16px;
+        }
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        .panel-title {
+            font-size: 0.82rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+        .panel-tag {
+            font-size: 0.7rem;
+            color: var(--muted);
+        }
+
+        .guidance-main {
+            display: flex; align-items: center; gap: 10px; margin-bottom: 6px;
+        }
+        .guidance-pill {
+            font-size: 0.8rem;
+            padding: 5px 9px;
+            border-radius: 999px;
+            border: 1px solid rgba(148,163,184,0.5);
+            background: radial-gradient(circle at top, rgba(34,197,94,0.25), transparent 60%);
+        }
+        .guidance-detail {
+            font-size: 0.75rem;
+            color: var(--muted);
+        }
+        .guidance-meta {
+            margin-top: 4px;
+            font-size: 0.7rem;
+            color: var(--muted);
+        }
+
+        .chart-card {
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            background: radial-gradient(circle at top, rgba(96,165,250,0.18), rgba(15,23,42,0.96));
+            padding: 10px 12px 4px 12px;
+            height: 230px;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 170px;
+        }
+
+        .table-card {
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            background: var(--surface);
+            padding: 10px 12px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.76rem;
+        }
+        thead tr {
+            background: rgba(15,23,42,0.9);
+        }
+        th {
+            text-align: left;
+            padding: 6px 6px;
+            color: var(--muted);
+            font-weight: 500;
+        }
+        td {
+            padding: 5px 6px;
+            border-top: 1px solid var(--border-2);
+        }
+        tbody tr:hover {
+            background: rgba(15,23,42,0.7);
+        }
+        .mono { font-family: var(--font-mono); font-feature-settings: "tnum" 1; }
+        .muted { color: var(--muted); }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            padding: 2px 7px;
+            font-size: 0.7rem;
+        }
+        .pill-green  { background: rgba(22,163,74,0.15);  color: #4ade80; }
+        .pill-blue   { background: rgba(37,99,235,0.2);   color: #93c5fd; }
+        .pill-gray   { background: rgba(148,163,184,0.18); color: var(--muted); }
+        .pill-yellow { background: rgba(234,179,8,0.18);   color: #facc15; }
+        .pill-red    { background: rgba(248,113,113,0.18); color: #fecaca; }
+        .pill-purple { background: rgba(129,140,248,0.18); color: #c7d2fe; }
     </style>
 </head>
 <body>
+<div class="app">
 
-<div class="header">
-    <h1>⚡ Claudex — Live Trading Dashboard</h1>
-    <p>Generated: 2026-05-03 13:44:50 UTC &nbsp;|&nbsp; Run ID: 1659b378 &nbsp;|&nbsp;
-       Active Model: compression_specialist_v7.joblib &nbsp;|&nbsp; Band: ge_0.78</p>
-</div>
-
-<!-- KPI Cards -->
-<div class="kpi-grid">
-    <div class="kpi red">
-        <div class="value">-0.32%</div>
-        <div class="label">Total Return</div>
-    </div>
-    <div class="kpi green">
-        <div class="value">66.0%</div>
-        <div class="label">Win Rate</div>
-    </div>
-    <div class="kpi">
-        <div class="value">50</div>
-        <div class="label">Total Trades</div>
-    </div>
-    <div class="kpi blue">
-        <div class="value">2</div>
-        <div class="label">Signals Emitted</div>
-    </div>
-    <div class="kpi green">
-        <div class="value">1.74</div>
-        <div class="label">WF Profit Factor</div>
-    </div>
-    <div class="kpi yellow">
-        <div class="value">10</div>
-        <div class="label">Drift Events</div>
-    </div>
-    <div class="kpi">
-        <div class="value">2026-05-03 19:05</div>
-        <div class="label">Last Run</div>
-    </div>
-</div>
-
-<!-- Walk-Forward Validated Edge -->
-<div class="section">
-    <h2>Walk-Forward Validated Edge (ge_0.78 Band)</h2>
-    <div class="wf-grid">
-        <div class="wf-card">
-            <div class="wf-val">2.15%</div>
-            <div class="wf-lbl">OOS Total Return</div>
+    <header class="header">
+        <div class="header-left">
+            <h1>⚡ Claudex · ETHUSD 1H</h1>
+            <p>Self-improving compression specialist · band ge_0.78 · Run 2532c340</p>
         </div>
-        <div class="wf-card">
-            <div class="wf-val">62.5%</div>
-            <div class="wf-lbl">OOS Win Rate</div>
+        <div class="header-right">
+            <span class="model-badge">hgb_compression_20260503_134449.joblib</span>
+            <button class="theme-toggle" data-theme-toggle aria-label="Switch to light mode">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                </svg>
+            </button>
+            <span class="status-label">
+                <span class="status-dot"></span>
+                Live · 2026-05-03 21:18:02 UTC
+            </span>
         </div>
-        <div class="wf-card">
-            <div class="wf-val">1.735</div>
-            <div class="wf-lbl">OOS Profit Factor</div>
+    </header>
+
+    <!-- KPI + Tabs row -->
+    <section style="margin-bottom:14px;">
+        <div class="kpi-row">
+            <div class="kpi">
+                <div class="kpi-value" style="color:var(--red);">
+                    -0.32%
+                </div>
+                <div class="kpi-label">Total Return</div>
+            </div>
+            <div class="kpi">
+                <div class="kpi-value" style="color:var(--yellow);">
+                    53.8%
+                </div>
+                <div class="kpi-label">Win Rate</div>
+            </div>
+            <div class="kpi">
+                <div class="kpi-value">13</div>
+                <div class="kpi-label">Live Trades</div>
+            </div>
+            <div class="kpi">
+                <div class="kpi-value">1</div>
+                <div class="kpi-label">Signals Emitted</div>
+            </div>
+            <div class="kpi">
+                <div class="kpi-value" style="color:var(--green);">
+                    1.74
+                </div>
+                <div class="kpi-label">WF Profit Factor</div>
+            </div>
+            <div class="kpi">
+                <div class="kpi-value" style="color:var(--yellow);">
+                    10
+                </div>
+                <div class="kpi-label">Drift Events</div>
+            </div>
+        </div>
+
+        <!-- Tab-cards with hover tooltips -->
+        <div class="tab-row">
+            <div class="tab-card">
+                <div class="tab-title">Model Health</div>
+                <div class="tab-sub">PF 1.74 · OOS +2.15%</div>
+                <div class="tab-tooltip">
+                    Walk-forward validated edge for the currently active specialist
+                    at band ge_0.78. Profit factor and OOS return drive whether
+                    retrains are promoted.
+                </div>
+            </div>
+            <div class="tab-card">
+                <div class="tab-title">Drift Monitor</div>
+                <div class="tab-sub">10 recent events</div>
+                <div class="tab-tooltip">
+                    Drift checker compares recent paper-trade PF and win rate
+                    against the baseline band result. If PF falls below 90% of
+                    baseline, a retrain is queued.
+                </div>
+            </div>
+            <div class="tab-card">
+                <div class="tab-title">Signal Quality</div>
+                <div class="tab-sub">1 live signals</div>
+                <div class="tab-tooltip">
+                    High-confidence compression signals filtered by calibrated
+                    rel_score ≥ 0.78. Each signal emits email + toast once.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="grid">
+        <!-- LEFT: Guidance + Equity -->
+        <div>
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title">Trade Guidance (Model View)</span>
+                    <span class="panel-tag">Not financial advice — model signal only</span>
+                </div>
+                <div class="guidance-main">
+                    <span class="guidance-pill mono">CALL · BUY</span>
+                    <div class="guidance-detail">Strong upside compression signal in compression. Consider call / long exposure from ~2304 with next 24–48h horizon.</div>
+                </div>
+                <div class="guidance-meta">
+                    Option type: <span class="mono">CALL</span> · Side:
+                    <span class="mono">BUY</span> · Target date:
+                    <span class="mono">2026-05-04</span>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="panel-header" style="margin-bottom:4px;">
+                    <span class="panel-title">Equity Curve · Paper Account</span>
+                    <span class="panel-tag">Base 100,000 · 2026-05-04 02:14</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="equityChart"></canvas>
+                </div>
+            </div>
+
+            <div class="table-card">
+                <div class="panel-header">
+                    <span class="panel-title">Recent Trades (Last 20)</span>
+                    <span class="panel-tag">Live paper_trades</span>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Entry</th><th>Entry $</th><th>Exit $</th>
+                            <th>Conf</th><th>Exit</th>
+                            <th>Return</th><th>PnL</th><th>Hold</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                <tr>
+                    <td>2026-01-25 17:30</td>
+                    <td class="mono">2942.38</td>
+                    <td class="mono">2893.7</td>
+                    <td><span class="pill pill-blue">0.802</span></td>
+                    <td><span class="pill pill-gray">stop_loss</span></td>
+                    <td class="mono" style="color:var(--red)">❌ -1.764%</td>
+                    <td class="mono" style="color:var(--red)">$-1,093.94</td>
+                    <td class="mono">3h</td>
+                </tr>
+                <tr>
+                    <td>2026-01-12 04:30</td>
+                    <td class="mono">3123.45</td>
+                    <td class="mono">3141.5</td>
+                    <td><span class="pill pill-blue">0.901</span></td>
+                    <td><span class="pill pill-gray">time_exit</span></td>
+                    <td class="mono" style="color:var(--green)">✅ +0.468%</td>
+                    <td class="mono" style="color:var(--green)">$+364.60</td>
+                    <td class="mono">12h</td>
+                </tr>
+                <tr>
+                    <td>2026-01-04 12:30</td>
+                    <td class="mono">3141.29</td>
+                    <td class="mono">3182.94</td>
+                    <td><span class="pill pill-blue">0.898</span></td>
+                    <td><span class="pill pill-gray">time_exit</span></td>
+                    <td class="mono" style="color:var(--green)">✅ +1.216%</td>
+                    <td class="mono" style="color:var(--green)">$+1,014.93</td>
+                    <td class="mono">12h</td>
+                </tr>
+                <tr>
+                    <td>2026-01-02 14:30</td>
+                    <td class="mono">3048.15</td>
+                    <td class="mono">3149.51</td>
+                    <td><span class="pill pill-blue">0.858</span></td>
+                    <td><span class="pill pill-gray">take_profit</span></td>
+                    <td class="mono" style="color:var(--green)">✅ +3.214%</td>
+                    <td class="mono" style="color:var(--green)">$+1,867.98</td>
+                    <td class="mono">6h</td>
+                </tr>
+                <tr>
+                    <td>2025-12-28 15:30</td>
+                    <td class="mono">2943.34</td>
+                    <td class="mono">2927.2</td>
+                    <td><span class="pill pill-blue">0.809</span></td>
+                    <td><span class="pill pill-gray">time_exit</span></td>
+                    <td class="mono" style="color:var(--red)">❌ -0.658%</td>
+                    <td class="mono" style="color:var(--red)">$-488.57</td>
+                    <td class="mono">12h</td>
+                </tr>
+                <tr>
+                    <td>2025-12-21 07:30</td>
+                    <td class="mono">2965.72</td>
+                    <td class="mono">3023.8</td>
+                    <td><span class="pill pill-blue">0.899</span></td>
+                    <td><span class="pill pill-gray">time_exit</span></td>
+                    <td class="mono" style="color:var(--green)">✅ +1.848%</td>
+                    <td class="mono" style="color:var(--green)">$+884.87</td>
+                    <td class="mono">12h</td>
+                </tr>
+                <tr>
+                    <td>2025-11-29 20:30</td>
+                    <td class="mono">3007.41</td>
+                    <td class="mono">2951.61</td>
+                    <td><span class="pill pill-blue">0.799</span></td>
+                    <td><span class="pill pill-gray">stop_loss</span></td>
+                    <td class="mono" style="color:var(--red)">❌ -1.965%</td>
+                    <td class="mono" style="color:var(--red)">$-1,056.53</td>
+                    <td class="mono">8h</td>
+                </tr>
+                <tr>
+                    <td>2025-10-25 23:30</td>
+                    <td class="mono">3959.68</td>
+                    <td class="mono">4079.38</td>
+                    <td><span class="pill pill-blue">0.995</span></td>
+                    <td><span class="pill pill-gray">time_exit</span></td>
+                    <td class="mono" style="color:var(--green)">✅ +2.912%</td>
+                    <td class="mono" style="color:var(--green)">$+811.26</td>
+                    <td class="mono">12h</td>
+                </tr>
+                <tr>
+                    <td>2025-09-27 22:30</td>
+                    <td class="mono">4001.68</td>
+                    <td class="mono">4101.98</td>
+                    <td><span class="pill pill-blue">0.993</span></td>
+                    <td><span class="pill pill-gray">time_exit</span></td>
+                    <td class="mono" style="color:var(--green)">✅ +2.396%</td>
+                    <td class="mono" style="color:var(--green)">$+582.50</td>
+                    <td class="mono">12h</td>
+                </tr>
+                <tr>
+                    <td>2025-09-21 21:30</td>
+                    <td class="mono">4476.83</td>
+                    <td class="mono">4413.46</td>
+                    <td><span class="pill pill-blue">0.959</span></td>
+                    <td><span class="pill pill-gray">stop_loss</span></td>
+                    <td class="mono" style="color:var(--red)">❌ -1.525%</td>
+                    <td class="mono" style="color:var(--red)">$-1,076.94</td>
+                    <td class="mono">6h</td>
+                </tr>
+                <tr>
+                    <td>2025-09-19 17:30</td>
+                    <td class="mono">4518.59</td>
+                    <td class="mono">4452.2</td>
+                    <td><span class="pill pill-blue">0.839</span></td>
+                    <td><span class="pill pill-gray">stop_loss</span></td>
+                    <td class="mono" style="color:var(--red)">❌ -1.579%</td>
+                    <td class="mono" style="color:var(--red)">$-1,085.16</td>
+                    <td class="mono">2h</td>
+                </tr>
+                <tr>
+                    <td>2025-09-09 18:30</td>
+                    <td class="mono">4347.42</td>
+                    <td class="mono">4292.32</td>
+                    <td><span class="pill pill-blue">0.966</span></td>
+                    <td><span class="pill pill-gray">stop_loss</span></td>
+                    <td class="mono" style="color:var(--red)">❌ -1.377%</td>
+                    <td class="mono" style="color:var(--red)">$-1,113.23</td>
+                    <td class="mono">1h</td>
+                </tr>
+                <tr>
+                    <td>2025-09-07 13:30</td>
+                    <td class="mono">4301.14</td>
+                    <td class="mono">4311.12</td>
+                    <td><span class="pill pill-blue">0.922</span></td>
+                    <td><span class="pill pill-gray">time_exit</span></td>
+                    <td class="mono" style="color:var(--green)">✅ +0.122%</td>
+                    <td class="mono" style="color:var(--green)">$+67.14</td>
+                    <td class="mono">12h</td>
+                </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- RIGHT: ETH chart + signals + runs -->
+        <div>
+            <div class="chart-card">
+                <div class="panel-header" style="margin-bottom:4px;">
+                    <span class="panel-title">ETHUSD · Nowcast + Hypothetical</span>
+                    <span class="panel-tag">Last 96h closes · dashed line = hypothetical</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="priceChart"></canvas>
+                </div>
+            </div>
+
+            <div class="table-card" style="margin-top:12px;">
+                <div class="panel-header">
+                    <span class="panel-title">Recent Signals</span>
+                    <span class="panel-tag">Latest 10 · rel_score band ≥ 0.78</span>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Emitted</th><th>Bar Open</th><th>Rel%</th><th>Close</th><th>Regime</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                <tr>
+                    <td>2026-05-03 20:24</td>
+                    <td>2026-05-03 06:00</td>
+                    <td><span class="pill pill-green">96.9%</span></td>
+                    <td class="mono">$2304.49</td>
+                    <td><span class="pill pill-blue">compression</span></td>
+                </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="table-card" style="margin-top:12px;">
+                <div class="panel-header">
+                    <span class="panel-title">Orchestrator Runs</span>
+                    <span class="panel-tag">Last 10 runs</span>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Started (UTC)</th><th>Run ID</th><th>Status</th>
+                            <th>New</th><th>Drift</th><th>Retrain</th><th>Signals</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                <tr>
+                    <td class="mono">2026-05-04 02:14:17</td>
+                    <td class="mono muted">da4b27f0</td>
+                    <td><span class="pill pill-green">OK</span></td>
+                    <td class="mono">0</td>
+                    <td><span class="pill pill-yellow">DRIFT</span></td>
+                    <td>—</td>
+                    <td class="mono">0</td>
+                </tr>
+                <tr>
+                    <td class="mono">2026-05-04 02:13:05</td>
+                    <td class="mono muted">b8d920d1</td>
+                    <td><span class="pill pill-green">OK</span></td>
+                    <td class="mono">0</td>
+                    <td><span class="pill pill-yellow">DRIFT</span></td>
+                    <td>—</td>
+                    <td class="mono">0</td>
+                </tr>
+                <tr>
+                    <td class="mono">2026-05-04 02:05:05</td>
+                    <td class="mono muted">e27eb163</td>
+                    <td><span class="pill pill-green">OK</span></td>
+                    <td class="mono">0</td>
+                    <td><span class="pill pill-yellow">DRIFT</span></td>
+                    <td>—</td>
+                    <td class="mono">0</td>
+                </tr>
+                <tr>
+                    <td class="mono">2026-05-04 01:55:46</td>
+                    <td class="mono muted">099e4c0c</td>
+                    <td><span class="pill pill-green">OK</span></td>
+                    <td class="mono">0</td>
+                    <td><span class="pill pill-yellow">DRIFT</span></td>
+                    <td>—</td>
+                    <td class="mono">0</td>
+                </tr>
+                <tr>
+                    <td class="mono">2026-05-04 01:54:08</td>
+                    <td class="mono muted">8734cb9b</td>
+                    <td><span class="pill pill-green">OK</span></td>
+                    <td class="mono">0</td>
+                    <td><span class="pill pill-yellow">DRIFT</span></td>
+                    <td>—</td>
+                    <td class="mono">1</td>
+                </tr>
+                <tr>
+                    <td class="mono">2026-05-04 01:49:23</td>
+                    <td class="mono muted">49111df1</td>
+                    <td><span class="pill pill-green">OK</span></td>
+                    <td class="mono">0</td>
+                    <td><span class="pill pill-yellow">DRIFT</span></td>
+                    <td><span class="pill pill-purple">YES</span></td>
+                    <td class="mono">1</td>
+                </tr>
+                <tr>
+                    <td class="mono">2026-05-04 01:40:40</td>
+                    <td class="mono muted">542b6312</td>
+                    <td><span class="pill pill-green">OK</span></td>
+                    <td class="mono">0</td>
+                    <td><span class="pill pill-yellow">DRIFT</span></td>
+                    <td><span class="pill pill-purple">YES</span></td>
+                    <td class="mono">1</td>
+                </tr>
+                <tr>
+                    <td class="mono">2026-05-04 01:37:33</td>
+                    <td class="mono muted">53a113eb</td>
+                    <td><span class="pill pill-green">OK</span></td>
+                    <td class="mono">1</td>
+                    <td><span class="pill pill-yellow">DRIFT</span></td>
+                    <td><span class="pill pill-purple">YES</span></td>
+                    <td class="mono">1</td>
+                </tr>
+                <tr>
+                    <td class="mono">2026-05-04 01:34:48</td>
+                    <td class="mono muted">cfc3c616</td>
+                    <td><span class="pill pill-green">OK</span></td>
+                    <td class="mono">0</td>
+                    <td><span class="pill pill-yellow">DRIFT</span></td>
+                    <td><span class="pill pill-purple">YES</span></td>
+                    <td class="mono">1</td>
+                </tr>
+                <tr>
+                    <td class="mono">2026-05-04 01:25:08</td>
+                    <td class="mono muted">4f447fa7</td>
+                    <td><span class="pill pill-green">OK</span></td>
+                    <td class="mono">0</td>
+                    <td><span class="pill pill-yellow">DRIFT</span></td>
+                    <td><span class="pill pill-purple">YES</span></td>
+                    <td class="mono">1</td>
+                </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-</div>
-
-<!-- Equity Curve -->
-<div class="section">
-    <h2>Equity Curve</h2>
-    <div class="chart-box">
-        <canvas id="equityChart"></canvas>
-    </div>
-</div>
-
-<!-- Recent Trades -->
-<div class="section">
-    <h2>Recent Trades (Last 20)</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Entry Time</th><th>Entry $</th><th>Exit $</th>
-                <th>Confidence</th><th>Exit Reason</th>
-                <th>Net Return</th><th>PnL $</th>
-            </tr>
-        </thead>
-        <tbody>
-                <tr>
-                    <td>2026-01-25 17:30</td>
-                    <td>2942.38</td>
-                    <td>2893.7</td>
-                    <td>0.802</td>
-                    <td>stop_loss</td>
-                    <td>❌ -1.764%</td>
-                    <td>$-1093.94</td>
-                </tr>
-                <tr>
-                    <td>2026-01-25 17:30</td>
-                    <td>2942.38</td>
-                    <td>2893.7</td>
-                    <td>0.802</td>
-                    <td>stop_loss</td>
-                    <td>❌ -1.764%</td>
-                    <td>$-1093.94</td>
-                </tr>
-                <tr>
-                    <td>2026-01-25 17:30</td>
-                    <td>2942.38</td>
-                    <td>2893.7</td>
-                    <td>0.802</td>
-                    <td>stop_loss</td>
-                    <td>❌ -1.764%</td>
-                    <td>$-1093.94</td>
-                </tr>
-                <tr>
-                    <td>2026-01-25 17:30</td>
-                    <td>2942.38</td>
-                    <td>2893.7</td>
-                    <td>0.802</td>
-                    <td>stop_loss</td>
-                    <td>❌ -1.764%</td>
-                    <td>$-1093.94</td>
-                </tr>
-                <tr>
-                    <td>2026-01-25 17:30</td>
-                    <td>2942.38</td>
-                    <td>2893.7</td>
-                    <td>0.802</td>
-                    <td>stop_loss</td>
-                    <td>❌ -1.764%</td>
-                    <td>$-1093.94</td>
-                </tr>
-                <tr>
-                    <td>2026-01-25 17:30</td>
-                    <td>2942.38</td>
-                    <td>2893.7</td>
-                    <td>0.802</td>
-                    <td>stop_loss</td>
-                    <td>❌ -1.764%</td>
-                    <td>$-1093.94</td>
-                </tr>
-                <tr>
-                    <td>2026-01-25 17:30</td>
-                    <td>2942.38</td>
-                    <td>2893.7</td>
-                    <td>0.802</td>
-                    <td>stop_loss</td>
-                    <td>❌ -1.764%</td>
-                    <td>$-1093.94</td>
-                </tr>
-                <tr>
-                    <td>2026-01-25 17:30</td>
-                    <td>2942.38</td>
-                    <td>2893.7</td>
-                    <td>0.802</td>
-                    <td>stop_loss</td>
-                    <td>❌ -1.764%</td>
-                    <td>$-1093.94</td>
-                </tr>
-                <tr>
-                    <td>2026-01-25 17:30</td>
-                    <td>2942.38</td>
-                    <td>2893.7</td>
-                    <td>0.802</td>
-                    <td>stop_loss</td>
-                    <td>❌ -1.764%</td>
-                    <td>$-1093.94</td>
-                </tr>
-                <tr>
-                    <td>2026-01-25 17:30</td>
-                    <td>2942.38</td>
-                    <td>2893.7</td>
-                    <td>0.802</td>
-                    <td>stop_loss</td>
-                    <td>❌ -1.764%</td>
-                    <td>$-1093.94</td>
-                </tr>
-                <tr>
-                    <td>2026-01-25 17:30</td>
-                    <td>2942.38</td>
-                    <td>2893.7</td>
-                    <td>0.802</td>
-                    <td>stop_loss</td>
-                    <td>❌ -1.764%</td>
-                    <td>$-1093.94</td>
-                </tr>
-                <tr>
-                    <td>2026-01-12 04:30</td>
-                    <td>3123.45</td>
-                    <td>3141.5</td>
-                    <td>0.901</td>
-                    <td>time_exit</td>
-                    <td>✅ 0.468%</td>
-                    <td>$364.6</td>
-                </tr>
-                <tr>
-                    <td>2026-01-12 04:30</td>
-                    <td>3123.45</td>
-                    <td>3141.5</td>
-                    <td>0.901</td>
-                    <td>time_exit</td>
-                    <td>✅ 0.468%</td>
-                    <td>$364.6</td>
-                </tr>
-                <tr>
-                    <td>2026-01-12 04:30</td>
-                    <td>3123.45</td>
-                    <td>3141.5</td>
-                    <td>0.901</td>
-                    <td>time_exit</td>
-                    <td>✅ 0.468%</td>
-                    <td>$364.6</td>
-                </tr>
-                <tr>
-                    <td>2026-01-12 04:30</td>
-                    <td>3123.45</td>
-                    <td>3141.5</td>
-                    <td>0.901</td>
-                    <td>time_exit</td>
-                    <td>✅ 0.468%</td>
-                    <td>$364.6</td>
-                </tr>
-                <tr>
-                    <td>2026-01-12 04:30</td>
-                    <td>3123.45</td>
-                    <td>3141.5</td>
-                    <td>0.901</td>
-                    <td>time_exit</td>
-                    <td>✅ 0.468%</td>
-                    <td>$364.6</td>
-                </tr>
-                <tr>
-                    <td>2026-01-12 04:30</td>
-                    <td>3123.45</td>
-                    <td>3141.5</td>
-                    <td>0.901</td>
-                    <td>time_exit</td>
-                    <td>✅ 0.468%</td>
-                    <td>$364.6</td>
-                </tr>
-                <tr>
-                    <td>2026-01-12 04:30</td>
-                    <td>3123.45</td>
-                    <td>3141.5</td>
-                    <td>0.901</td>
-                    <td>time_exit</td>
-                    <td>✅ 0.468%</td>
-                    <td>$364.6</td>
-                </tr>
-                <tr>
-                    <td>2026-01-12 04:30</td>
-                    <td>3123.45</td>
-                    <td>3141.5</td>
-                    <td>0.901</td>
-                    <td>time_exit</td>
-                    <td>✅ 0.468%</td>
-                    <td>$364.6</td>
-                </tr>
-                <tr>
-                    <td>2026-01-12 04:30</td>
-                    <td>3123.45</td>
-                    <td>3141.5</td>
-                    <td>0.901</td>
-                    <td>time_exit</td>
-                    <td>✅ 0.468%</td>
-                    <td>$364.6</td>
-                </tr></tbody>
-    </table>
-</div>
-
-<!-- Run Log -->
-<div class="section">
-    <h2>Orchestrator Run Log (Last 10)</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Started (UTC)</th><th>Run ID</th><th>Status</th>
-                <th>New Rows</th><th>Drift</th><th>Retrained</th><th>Signals</th>
-            </tr>
-        </thead>
-        <tbody>
-                <tr>
-                    <td>2026-05-03 19:05:37</td>
-                    <td>3f858d41</td>
-                    <td>🟢 OK</td>
-                    <td>0</td>
-                    <td>⚠️ YES</td>
-                    <td>🔄 YES</td>
-                    <td>0</td>
-                </tr>
-                <tr>
-                    <td>2026-05-03 19:04:09</td>
-                    <td>1b50f70c</td>
-                    <td>🟢 OK</td>
-                    <td>0</td>
-                    <td>⚠️ YES</td>
-                    <td>No</td>
-                    <td>0</td>
-                </tr>
-                <tr>
-                    <td>2026-05-03 18:57:46</td>
-                    <td>125262f5</td>
-                    <td>🟢 OK</td>
-                    <td>0</td>
-                    <td>⚠️ YES</td>
-                    <td>No</td>
-                    <td>0</td>
-                </tr>
-                <tr>
-                    <td>2026-05-03 18:36:59</td>
-                    <td>d0ef7a8c</td>
-                    <td>🟢 OK</td>
-                    <td>21</td>
-                    <td>⚠️ YES</td>
-                    <td>No</td>
-                    <td>0</td>
-                </tr>
-                <tr>
-                    <td>2026-05-03 18:35:31</td>
-                    <td>1792bbb1</td>
-                    <td>🟢 OK</td>
-                    <td>42</td>
-                    <td>⚠️ YES</td>
-                    <td>No</td>
-                    <td>0</td>
-                </tr>
-                <tr>
-                    <td>2026-05-03 18:34:07</td>
-                    <td>8bbe19d1</td>
-                    <td>🟢 OK</td>
-                    <td>42</td>
-                    <td>⚠️ YES</td>
-                    <td>No</td>
-                    <td>0</td>
-                </tr>
-                <tr>
-                    <td>2026-05-03 18:08:30</td>
-                    <td>28e2b01c</td>
-                    <td>🟢 OK</td>
-                    <td>42</td>
-                    <td>⚠️ YES</td>
-                    <td>No</td>
-                    <td>0</td>
-                </tr>
-                <tr>
-                    <td>2026-05-03 18:06:07</td>
-                    <td>0296c159</td>
-                    <td>🟢 OK</td>
-                    <td>42</td>
-                    <td>⚠️ YES</td>
-                    <td>No</td>
-                    <td>0</td>
-                </tr>
-                <tr>
-                    <td>2026-05-03 18:04:37</td>
-                    <td>96e3b643</td>
-                    <td>🟢 OK</td>
-                    <td>42</td>
-                    <td>⚠️ YES</td>
-                    <td>No</td>
-                    <td>0</td>
-                </tr>
-                <tr>
-                    <td>2026-05-03 18:02:30</td>
-                    <td>9213ecdc</td>
-                    <td>🟢 OK</td>
-                    <td>42</td>
-                    <td>⚠️ YES</td>
-                    <td>No</td>
-                    <td>0</td>
-                </tr></tbody>
-    </table>
 </div>
 
 <script>
-const labels = [['2025-12-28 15:30', -2.47],['2025-12-28 15:30', -2.47],['2025-12-28 15:30', -2.47],['2025-12-28 15:30', -2.47],['2025-12-28 15:30', -2.47],['2025-12-28 15:30', -2.47],['2026-01-02 14:30', -0.61],['2026-01-02 14:30', -0.61],['2026-01-02 14:30', -0.61],['2026-01-02 14:30', -0.61],['2026-01-02 14:30', -0.61],['2026-01-02 14:30', -0.61],['2026-01-02 14:30', -0.61],['2026-01-02 14:30', -0.61],['2026-01-02 14:30', -0.61],['2026-01-02 14:30', -0.61],['2026-01-02 14:30', -0.61],['2026-01-04 12:30', 0.41],['2026-01-04 12:30', 0.41],['2026-01-04 12:30', 0.41],['2026-01-04 12:30', 0.41],['2026-01-04 12:30', 0.41],['2026-01-04 12:30', 0.41],['2026-01-04 12:30', 0.41],['2026-01-04 12:30', 0.41],['2026-01-04 12:30', 0.41],['2026-01-04 12:30', 0.41],['2026-01-04 12:30', 0.41],['2026-01-12 04:30', 0.77],['2026-01-12 04:30', 0.77],['2026-01-12 04:30', 0.77],['2026-01-12 04:30', 0.77],['2026-01-12 04:30', 0.77],['2026-01-12 04:30', 0.77],['2026-01-12 04:30', 0.77],['2026-01-12 04:30', 0.77],['2026-01-12 04:30', 0.77],['2026-01-12 04:30', 0.77],['2026-01-12 04:30', 0.77],['2026-01-25 17:30', -0.32],['2026-01-25 17:30', -0.32],['2026-01-25 17:30', -0.32],['2026-01-25 17:30', -0.32],['2026-01-25 17:30', -0.32],['2026-01-25 17:30', -0.32],['2026-01-25 17:30', -0.32],['2026-01-25 17:30', -0.32],['2026-01-25 17:30', -0.32],['2026-01-25 17:30', -0.32],['2026-01-25 17:30', -0.32],].map(r => r[0]);
-const data   = [['2025-12-28 15:30', -2.47],['2025-12-28 15:30', -2.47],['2025-12-28 15:30', -2.47],['2025-12-28 15:30', -2.47],['2025-12-28 15:30', -2.47],['2025-12-28 15:30', -2.47],['2026-01-02 14:30', -0.61],['2026-01-02 14:30', -0.61],['2026-01-02 14:30', -0.61],['2026-01-02 14:30', -0.61],['2026-01-02 14:30', -0.61],['2026-01-02 14:30', -0.61],['2026-01-02 14:30', -0.61],['2026-01-02 14:30', -0.61],['2026-01-02 14:30', -0.61],['2026-01-02 14:30', -0.61],['2026-01-02 14:30', -0.61],['2026-01-04 12:30', 0.41],['2026-01-04 12:30', 0.41],['2026-01-04 12:30', 0.41],['2026-01-04 12:30', 0.41],['2026-01-04 12:30', 0.41],['2026-01-04 12:30', 0.41],['2026-01-04 12:30', 0.41],['2026-01-04 12:30', 0.41],['2026-01-04 12:30', 0.41],['2026-01-04 12:30', 0.41],['2026-01-04 12:30', 0.41],['2026-01-12 04:30', 0.77],['2026-01-12 04:30', 0.77],['2026-01-12 04:30', 0.77],['2026-01-12 04:30', 0.77],['2026-01-12 04:30', 0.77],['2026-01-12 04:30', 0.77],['2026-01-12 04:30', 0.77],['2026-01-12 04:30', 0.77],['2026-01-12 04:30', 0.77],['2026-01-12 04:30', 0.77],['2026-01-12 04:30', 0.77],['2026-01-25 17:30', -0.32],['2026-01-25 17:30', -0.32],['2026-01-25 17:30', -0.32],['2026-01-25 17:30', -0.32],['2026-01-25 17:30', -0.32],['2026-01-25 17:30', -0.32],['2026-01-25 17:30', -0.32],['2026-01-25 17:30', -0.32],['2026-01-25 17:30', -0.32],['2026-01-25 17:30', -0.32],['2026-01-25 17:30', -0.32],].map(r => r[1]);
-new Chart(document.getElementById('equityChart'), {
-    type: 'line',
-    data: {
-        labels: labels,
-        datasets: [{
-            label: 'Equity Return %',
-            data: data,
-            borderColor: '#58a6ff',
-            backgroundColor: 'rgba(88,166,255,0.08)',
-            borderWidth: 2,
-            pointRadius: 2,
-            fill: true,
-            tension: 0.3,
-        }]
-    },
-    options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-            x: { ticks: { color: '#8b949e', maxTicksLimit: 8 },
-                  grid: { color: '#21262d' } },
-            y: { ticks: { color: '#8b949e' },
-                  grid: { color: '#21262d' } }
+(function() {
+    // ── Theme toggle ──────────────────────────────────────────────────────
+    const root   = document.documentElement;
+    const toggle = document.querySelector('[data-theme-toggle]');
+    let theme    = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+
+    function applyTheme(t) {
+        theme = t;
+        root.setAttribute('data-theme', t);
+        if (toggle) {
+            toggle.setAttribute('aria-label',
+                'Switch to ' + (t === 'dark' ? 'light' : 'dark') + ' mode');
+            toggle.innerHTML = t === 'dark'
+                ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'
+                : '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>';
         }
     }
-});
+    applyTheme(theme);
+    toggle && toggle.addEventListener('click', () =>
+        applyTheme(theme === 'dark' ? 'light' : 'dark')
+    );
+
+    // ── Equity chart ──────────────────────────────────────────────────────
+    const eqLabels = ["2025-09-07 13:30", "2025-09-09 18:30", "2025-09-19 17:30", "2025-09-21 21:30", "2025-09-27 22:30", "2025-10-25 23:30", "2025-11-29 20:30", "2025-12-21 07:30", "2025-12-28 15:30", "2026-01-02 14:30", "2026-01-04 12:30", "2026-01-12 04:30", "2026-01-25 17:30"];
+    const eqValues = [0.067, -1.046, -2.131, -3.208, -2.626, -1.814, -2.871, -1.986, -2.475, -0.607, 0.408, 0.773, -0.321];
+    if (eqLabels.length && eqValues.length) {
+        new Chart(document.getElementById('equityChart'), {
+            type: 'line',
+            data: {
+                labels: eqLabels,
+                datasets: [{
+                    label: 'Equity Return %',
+                    data: eqValues,
+                    borderColor: '#60a5fa',
+                    backgroundColor: 'rgba(96,165,250,0.18)',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    pointHitRadius: 6,
+                    fill: true,
+                    tension: 0.35,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                },
+                scales: {
+                    x: {
+                        ticks: { color: '#9ca3af', maxTicksLimit: 7 },
+                        grid: { color: 'rgba(31,41,55,0.6)' },
+                    },
+                    y: {
+                        ticks: { color: '#9ca3af', callback: v => v + '%' },
+                        grid: { color: 'rgba(31,41,55,0.6)' },
+                    },
+                },
+            }
+        });
+    }
+
+    // ── ETH nowcast + hypothetical chart ──────────────────────────────────
+    const pLabels = ["2026-04-29 22:00", "2026-04-29 23:00", "2026-04-30 00:00", "2026-04-30 01:00", "2026-04-30 02:00", "2026-04-30 03:00", "2026-04-30 04:00", "2026-04-30 05:00", "2026-04-30 06:00", "2026-04-30 07:00", "2026-04-30 08:00", "2026-04-30 09:00", "2026-04-30 10:00", "2026-04-30 11:00", "2026-04-30 12:00", "2026-04-30 13:00", "2026-04-30 14:00", "2026-04-30 15:00", "2026-04-30 16:00", "2026-04-30 17:00", "2026-04-30 18:00", "2026-04-30 19:00", "2026-04-30 20:00", "2026-04-30 21:00", "2026-04-30 22:00", "2026-04-30 23:00", "2026-05-01 00:00", "2026-05-01 01:00", "2026-05-01 02:00", "2026-05-01 03:00", "2026-05-01 04:00", "2026-05-01 05:00", "2026-05-01 06:00", "2026-05-01 07:00", "2026-05-01 08:00", "2026-05-01 09:00", "2026-05-01 10:00", "2026-05-01 11:00", "2026-05-01 12:00", "2026-05-01 13:00", "2026-05-01 14:00", "2026-05-01 15:00", "2026-05-01 16:00", "2026-05-01 17:00", "2026-05-01 18:00", "2026-05-01 19:00", "2026-05-01 20:00", "2026-05-01 21:00", "2026-05-01 22:00", "2026-05-01 23:00", "2026-05-02 00:00", "2026-05-02 01:00", "2026-05-02 02:00", "2026-05-02 03:00", "2026-05-02 04:00", "2026-05-02 05:00", "2026-05-02 06:00", "2026-05-02 07:00", "2026-05-02 08:00", "2026-05-02 09:00", "2026-05-02 10:00", "2026-05-02 11:00", "2026-05-02 12:00", "2026-05-02 13:00", "2026-05-02 14:00", "2026-05-02 15:00", "2026-05-02 16:00", "2026-05-02 17:00", "2026-05-02 18:00", "2026-05-02 19:00", "2026-05-02 20:00", "2026-05-02 21:00", "2026-05-02 22:00", "2026-05-02 23:00", "2026-05-03 00:00", "2026-05-03 01:00", "2026-05-03 02:00", "2026-05-03 03:00", "2026-05-03 04:00", "2026-05-03 05:00", "2026-05-03 06:00", "2026-05-03 07:00", "2026-05-03 08:00", "2026-05-03 09:00", "2026-05-03 10:00", "2026-05-03 11:00", "2026-05-03 12:00", "2026-05-03 13:00", "2026-05-03 14:00", "2026-05-03 15:00", "2026-05-03 16:00", "2026-05-03 17:00", "2026-05-03 18:00", "2026-05-03 19:00", "2026-05-03 20:00", "2026-05-03 21:00"];
+    const pNow    = [2257.78, 2252.9, 2272.46, 2269.35, 2245.13, 2253.24, 2238.97, 2242.76, 2248.03, 2260.31, 2256.65, 2261.86, 2262.01, 2258.18, 2265.45, 2263.9, 2262.01, 2265.7, 2257.24, 2258.14, 2259.84, 2261.99, 2264.34, 2256.29, 2254.25, 2257.51, 2260.0, 2267.75, 2266.94, 2282.87, 2280.12, 2283.26, 2277.45, 2279.48, 2286.92, 2282.07, 2282.53, 2286.45, 2301.36, 2318.22, 2308.04, 2307.64, 2301.94, 2311.76, 2304.76, 2304.85, 2285.19, 2292.68, 2293.5, 2295.63, 2297.6, 2298.63, 2303.31, 2304.44, 2301.26, 2299.47, 2305.58, 2301.02, 2303.35, 2305.13, 2303.54, 2302.1, 2303.52, 2308.08, 2306.69, 2309.19, 2309.31, 2305.9, 2310.3, 2311.08, 2311.58, 2325.62, 2327.0, 2316.97, 2313.98, 2304.14, 2303.41, 2301.9, 2301.53, 2304.11, 2304.49, 2309.28, 2308.28, 2316.47, 2311.54, 2319.63, 2325.71, 2326.41, 2325.97, 2328.44, 2325.6, 2331.85, 2330.98, 2330.3, 2334.83, 2331.24];
+    const pFut    = [None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 2331.24, 2331.71, 2332.09];
+    if (pLabels.length && pNow.length) {
+        new Chart(document.getElementById('priceChart'), {
+            type: 'line',
+            data: {
+                labels: pLabels.concat(pFut.length ? ['+1h','+2h'] : []),
+                datasets: [
+                    {
+                        label: 'ETHUSD close',
+                        data: pNow,
+                        borderColor: '#34d399',
+                        backgroundColor: 'rgba(16,185,129,0.16)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        pointHitRadius: 6,
+                        fill: true,
+                        tension: 0.3,
+                    },
+                    pFut.length ? {
+                        label: 'Hypothetical path',
+                        data: pFut,
+                        borderColor: '#fbbf24',
+                        borderWidth: 1.5,
+                        borderDash: [5,4],
+                        pointRadius: 0,
+                        fill: false,
+                        tension: 0.4,
+                    } : null,
+                ].filter(Boolean)
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(2)
+                        },
+                    },
+                },
+                scales: {
+                    x: {
+                        ticks: { color: '#9ca3af', maxTicksLimit: 7 },
+                        grid: { color: 'rgba(31,41,55,0.6)' },
+                    },
+                    y: {
+                        ticks: { color: '#9ca3af' },
+                        grid: { color: 'rgba(31,41,55,0.6)' },
+                    },
+                },
+            }
+        });
+    }
+})();
 </script>
 
 </body>

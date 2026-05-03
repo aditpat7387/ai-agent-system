@@ -4,6 +4,7 @@
 # Called by Windows Task Scheduler every hour
 # =============================================================================
 
+
 import sys
 import uuid
 import json
@@ -13,9 +14,11 @@ import duckdb
 from pathlib import Path
 from datetime import datetime, timezone
 
+
 # Add project root to path
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_ROOT))
+
 
 from src.agents.run_logger import (
     ensure_log_tables,
@@ -25,9 +28,11 @@ from src.agents.run_logger import (
 from src.agents.retrain_subagent import run_retrain_subagent
 
 
+
 # =============================================================================
 # Config Loader
 # =============================================================================
+
 
 def load_config() -> dict:
     config_path = PROJECT_ROOT / "configs" / "agent_config.yaml"
@@ -35,9 +40,11 @@ def load_config() -> dict:
         return yaml.safe_load(f)
 
 
+
 # =============================================================================
 # Agent Tool Imports
 # =============================================================================
+
 
 def import_agents():
     """
@@ -98,9 +105,11 @@ def import_agents():
     return agents
 
 
+
 # =============================================================================
 # Step Runner
 # =============================================================================
+
 
 def run_step(
     con: duckdb.DuckDBPyConnection,
@@ -172,12 +181,76 @@ def run_step(
         return result
 
 
+
+# =============================================================================
+# Predictions Hydration
+# Loads rel_score + prediction rows from DuckDB into context after
+# prediction_agent runs, so signal_agent can threshold on rel_score.
+# =============================================================================
+
+
+def hydrate_predictions(con: duckdb.DuckDBPyConnection, cfg: dict, context: dict) -> None:
+    """
+    Reads the predictions table written by prediction_agent and populates
+    context["predictions"] as a list of dicts for signal_agent consumption.
+    Falls back gracefully — never raises, never blocks the pipeline.
+    """
+    try:
+        pred_table = cfg["tables"]["predictions"]
+
+        # Detect which score columns exist (graceful compat with old schema)
+        existing_cols = {
+            row[0] for row in con.execute(
+                f"SELECT column_name FROM information_schema.columns "
+                f"WHERE table_name = '{pred_table}'"
+            ).fetchall()
+        }
+
+        # Build SELECT dynamically — always include rel_score if present
+        select_cols = ["open_time", "close", "pred_label", "pred_proba"]
+        if "cal_proba"  in existing_cols: select_cols.append("cal_proba")
+        if "rel_score"  in existing_cols: select_cols.append("rel_score")
+
+        rows = con.execute(
+            f"SELECT {', '.join(select_cols)} FROM {pred_table} "
+            f"ORDER BY open_time DESC"
+        ).fetchdf()
+
+        if rows.empty:
+            context["predictions"] = []
+            print("[ORCH] predictions table is empty — no signals possible this cycle")
+            return
+
+        context["predictions"] = [
+            {
+                "open_time":  str(r["open_time"]),
+                "close":      float(r["close"]),
+                "pred_label": int(r["pred_label"]),
+                "proba":      float(r["pred_proba"]),          # backward compat key
+                "cal_proba":  float(r.get("cal_proba", r["pred_proba"])),
+                "rel_score":  float(r.get("rel_score", 0.0)), # 0.0 if col missing
+                "regime":     "compression",
+            }
+            for _, r in rows.iterrows()
+        ]
+
+        n_signals = sum(1 for p in context["predictions"] if p["rel_score"] >= cfg["signal_agent"]["threshold"])
+        print(f"[ORCH] Hydrated {len(context['predictions'])} predictions "
+              f"({n_signals} above rel_score >= {cfg['signal_agent']['threshold']})")
+
+    except Exception as e:
+        print(f"[WARN] hydrate_predictions failed — signal_agent will get empty list: {e}")
+        context["predictions"] = []
+
+
+
 # =============================================================================
 # Main Orchestrator Loop
 # =============================================================================
 
+
 def main():
-    run_id = str(uuid.uuid4())[:8]
+    run_id    = str(uuid.uuid4())[:8]
     run_start = datetime.now(timezone.utc)
 
     print("=" * 70)
@@ -185,28 +258,29 @@ def main():
     print(f"[ORCHESTRATOR] Started: {run_start.strftime('%Y-%m-%d %H:%M:%S')} UTC")
     print("=" * 70)
 
-    cfg = load_config()
-    db_path = PROJECT_ROOT / cfg["paths"]["db_path"]
+    cfg             = load_config()
+    db_path         = PROJECT_ROOT / cfg["paths"]["db_path"]
     abort_on_failure = cfg["orchestrator"]["abort_on_step_failure"]
 
     con = duckdb.connect(str(db_path))
     ensure_log_tables(con)
 
-    agents = import_agents()
+    agents       = import_agents()
     step_results = []
-    aborted = False
+    aborted      = False
     abort_reason = None
 
     # Shared context dict — all state passes through here and DuckDB
     context = {
-        "run_id":         run_id,
-        "run_start":      run_start.isoformat(),
-        "project_root":   str(PROJECT_ROOT),
-        "new_rows_added": 0,
-        "drift_detected": False,
-        "retrained":      False,
+        "run_id":          run_id,
+        "run_start":       run_start.isoformat(),
+        "project_root":    str(PROJECT_ROOT),
+        "new_rows_added":  0,
+        "drift_detected":  False,
+        "retrained":       False,
         "signals_emitted": 0,
-        "model_path":     str(PROJECT_ROOT / cfg["prediction_agent"]["model_path"]),
+        "predictions":     [],   # ← populated by hydrate_predictions() after prediction_agent
+        "model_path":      str(PROJECT_ROOT / cfg["prediction_agent"]["model_path"]),
     }
 
     pipeline_steps = [
@@ -236,17 +310,18 @@ def main():
             )
             step_results.append(result)
 
-            # Update shared context from step output
+            # ── Update shared context from step output ────────────────────────
             if result["status"] == "success" and "output" in result:
                 out = result["output"]
-                if "new_rows_added" in out:
-                    context["new_rows_added"] = out["new_rows_added"]
-                if "drift_detected" in out:
-                    context["drift_detected"] = out["drift_detected"]
-                if "signals_emitted" in out:
-                    context["signals_emitted"] += out["signals_emitted"]
+                if "new_rows_added"  in out: context["new_rows_added"]   = out["new_rows_added"]
+                if "drift_detected"  in out: context["drift_detected"]   = out["drift_detected"]
+                if "signals_emitted" in out: context["signals_emitted"] += out["signals_emitted"]
 
-            # ── Reactive retrain subagent — spawned after drift_checker ──────
+            # ── ADDED: hydrate predictions into context after prediction_agent ─
+            if step_name == "prediction_agent" and result["status"] == "success":
+                hydrate_predictions(con, cfg, context)
+
+            # ── Reactive retrain subagent — spawned after drift_checker ───────
             if step_name == "drift_checker" and context.get("drift_detected"):
                 retrain_step = run_step(
                     con=con,
@@ -264,12 +339,12 @@ def main():
                     )
 
     except RuntimeError as e:
-        aborted = True
+        aborted      = True
         abort_reason = str(e)
         print(f"\n[ABORT] Pipeline aborted: {abort_reason}")
 
     finally:
-        run_end = datetime.now(timezone.utc)
+        run_end  = datetime.now(timezone.utc)
         duration = (run_end - run_start).total_seconds()
 
         log_run(
