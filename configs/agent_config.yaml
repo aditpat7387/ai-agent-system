@@ -1,53 +1,64 @@
+# =============================================================================
+# Claudex Agent Configuration
+# Single source of truth for all agent settings, thresholds, and paths
+# =============================================================================
+
 paths:
-  project_root: C:/Users/ASUS/Downloads/Claudex
-  db_path: data/market.duckdb
-  model_dir: models/artifacts
-  artifacts_dir: artifacts
-  logs_dir: logs
-  dashboard_dir: src/dashboard
-  configs_dir: configs
+  project_root: "C:/Users/ASUS/Downloads/Claudex"
+  db_path: "data/market.duckdb"
+  model_dir: "models/artifacts"
+  artifacts_dir: "artifacts"
+  logs_dir: "logs"
+  dashboard_dir: "src/dashboard"
+  configs_dir: "configs"
+
 tables:
-  canonical_market: ethusd_1h_market
-  feature_store: feature_store_v2
-  regime_table: regime_table
-  predictions: ethusd_predictions_calibrated_v7
-  compression_trades: compression_specialist_band_walk_forward_trades_v7
-  compression_summary: compression_specialist_band_walk_forward_summary_v7
-  compression_selected: compression_specialist_band_walk_forward_selected_v7
-  run_log: run_log
-  agent_step_log: agent_step_log
-  signal_log: signal_log
-  drift_log: drift_log
-  model_registry: model_registry
+  canonical_market: "ethusd_1h_market"
+  feature_store: "feature_store_v2"
+  regime_table: "regime_table"
+  predictions: "ethusd_predictions_calibrated_v7"
+  compression_trades: "compression_specialist_band_walk_forward_trades_v7"
+  compression_summary: "compression_specialist_band_walk_forward_summary_v7"
+  compression_selected: "compression_specialist_band_walk_forward_selected_v7"
+  run_log: "run_log"
+  agent_step_log: "agent_step_log"
+  signal_log: "signal_log"
+  drift_log: "drift_log"
+  model_registry: "model_registry"
+  paper_trades: "paper_trade_agent_log"
+
 data_agent:
-  symbol: ETHUSDT
-  interval: 1h
-  binance_base_url: https://api.binance.com
+  symbol: "ETHUSDT"
+  interval: "1h"
+  binance_base_url: "https://api.binance.com"
   lookback_bars: 48
   max_gap_hours: 2
   enabled: true
+
 feature_agent:
   incremental: true
   vol_window: 20
   regime_lookback: 50
   enabled: true
+
 drift_checker:
   baseline_profit_factor: 1.6
   baseline_win_rate: 0.666667
   baseline_oos_return: 0.166667
   baseline_pf_locked: true
-  baseline_last_updated: '2026-05-03T20:04:51.907953+00:00'
+  baseline_last_updated: "2026-05-03T20:04:51.907953+00:00"
   evaluation_window_rows: 126
   min_trades_for_drift_check: 5
   drift_pf_threshold: 0.9
   drift_winrate_threshold: 0.5
   enabled: true
+
 retrain_subagent:
-  training_table: ethusd_features_1h_v2
-  label_table: ethusd_event_targets_1h
-  label_col: event_label
-  join_on: open_time
-  regime_filter: compression
+  training_table: "ethusd_features_1h_v2"
+  label_table: "ethusd_event_targets_1h"
+  label_col: "event_label"
+  join_on: "open_time"
+  regime_filter: "compression"
   min_train_rows: 100
   promotion_min_pf: 1.2
   oos_test_pct: 0.2
@@ -55,22 +66,24 @@ retrain_subagent:
   max_iter: 300
   learning_rate: 0.05
   max_leaf_nodes: 31
-  model_save_path: models/artifacts/hgb_compression_20260503_134449.joblib
-  calibrator_save_path: models/artifacts/compression_calibrator.joblib
-  feature_cols_path: models/artifacts/feature_cols.json
+  model_save_path: "models/artifacts/hgb_compression_20260503_134449.joblib"
+  calibrator_save_path: "models/artifacts/compression_calibrator.joblib"
+  feature_cols_path: "models/artifacts/feature_cols.json"
   retrain_cooldown_hours: 24
   enabled: true
+
 prediction_agent:
-  model_path: models/artifacts/hgb_compression_20260503_134449.joblib
-  calibrator_path: models/artifacts/compression_calibrator.joblib
-  feature_cols_path: models/artifacts/feature_cols.json
-  source_table: ethusd_features_1h_v2
-  predictions_table: ethusd_predictions_calibrated_v7
+  model_path: "models/artifacts/hgb_compression_20260503_134449.joblib"
+  calibrator_path: "models/artifacts/compression_calibrator.joblib"
+  feature_cols_path: "models/artifacts/feature_cols.json"
+  source_table: "ethusd_features_1h_v2"
+  predictions_table: "ethusd_predictions_calibrated_v7"
   band_min: 0.78
   prediction_window_rows: 48
   enabled: true
+
 paper_trade_agent:
-  band_name: ge_0.78
+  band_name: "ge_0.78"
   band_min: 0.78
   band_max: null
   fee_bps: 4.0
@@ -84,37 +97,41 @@ paper_trade_agent:
   breakeven_trigger: 0.5
   cooldown_bars: 3
   enabled: true
+
 signal_agent:
   threshold: 0.78
-  score_col: rel_score
+  score_col: "rel_score"
   email:
     enabled: true
-    smtp_host: smtp.gmail.com
+    smtp_host: "smtp.gmail.com"
     smtp_port: 465
-    sender: aditya027patil@gmail.com
-    app_password: tror nfhs ngvs gloh
-    recipient: aditya027patil@gmail.com
+    sender: "aditya027patil@gmail.com"
+    app_password: "tror nfhs ngvs gloh"
+    recipient: "aditya027patil@gmail.com"
   toast:
     enabled: true
     duration: 10
+
 dashboard_agent:
-  output_path: src/dashboard/index.html
+  output_path: "src/dashboard/index.html"
   auto_open: false
   lookback_trades: 50
   enabled: true
+
 run_logger:
-  log_table: run_log
-  step_log_table: agent_step_log
+  log_table: "run_log"
+  step_log_table: "agent_step_log"
   retention_days: 90
+
 orchestrator:
   abort_on_step_failure: true
   steps:
-  - data_agent
-  - feature_agent
-  - drift_checker
-  - prediction_agent
-  - paper_trade_agent
-  - signal_agent
-  - dashboard_agent
-  - run_logger
-  schedule_hint: hourly
+    - data_agent
+    - feature_agent
+    - drift_checker
+    - prediction_agent
+    - paper_trade_agent
+    - signal_agent
+    - dashboard_agent
+    - run_logger
+  schedule_hint: "hourly"

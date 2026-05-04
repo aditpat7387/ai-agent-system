@@ -1,867 +1,831 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="refresh" content="3600">
-    <title>Claudex Dashboard</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <style>
-        :root {
-            --bg:        #05070b;
-            --surface:   #0b0f16;
-            --surface-2: #111827;
-            --surface-3: #111827;
-            --border:    rgba(255,255,255,0.08);
-            --border-2:  rgba(255,255,255,0.04);
-            --text:      #e5e7eb;
-            --muted:     #9ca3af;
-            --faint:     #4b5563;
-            --blue:      #60a5fa;
-            --green:     #34d399;
-            --red:       #f97373;
-            --yellow:    #fbbf24;
-            --purple:    #a78bfa;
-            --font-body: 'Inter', -apple-system, system-ui, sans-serif;
-            --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
-            --radius:    7px;
-            --radius-lg: 11px;
-        }
-        [data-theme="light"] {
-            --bg:        #f5f5f4;
-            --surface:   #ffffff;
-            --surface-2: #f3f3f2;
-            --surface-3: #e8e8e5;
-            --border:    rgba(15,23,42,0.12);
-            --border-2:  rgba(15,23,42,0.06);
-            --text:      #111827;
-            --muted:     #6b7280;
-            --faint:     #d1d5db;
-            --blue:      #2563eb;
-            --green:     #059669;
-            --red:       #dc2626;
-            --yellow:    #d97706;
-            --purple:    #7c3aed;
-        }
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: var(--font-body);
-            background: radial-gradient(circle at top, #111827 0, var(--bg) 55%);
-            color: var(--text);
-            min-height: 100vh;
-        }
-        .app {
-            max-width: 1180px;
-            margin: 16px auto 32px auto;
-            padding: 0 16px 32px 16px;
-        }
-        .header {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 14px 18px;
-            border-radius: var(--radius-lg);
-            background: linear-gradient(120deg, rgba(96,165,250,0.13), rgba(16,185,129,0.05));
-            border: 1px solid rgba(148,163,184,0.3);
-            box-shadow: 0 18px 40px rgba(15,23,42,0.45);
-            margin-bottom: 18px;
-        }
-        .header-left h1 {
-            font-size: 1.15rem;
-            letter-spacing: 0.04em;
-        }
-        .header-left p {
-            margin-top: 4px;
-            font-size: 0.75rem;
-            color: var(--muted);
-        }
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .model-badge {
-            font-size: 0.72rem;
-            padding: 4px 8px;
-            border-radius: 999px;
-            background: rgba(15,23,42,0.75);
-            border: 1px solid rgba(148,163,184,0.5);
-        }
-        .status-label {
-            font-size: 0.72rem;
-            color: var(--muted);
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .status-dot {
-            width: 7px; height: 7px; border-radius: 999px;
-            background: var(--green);
-            box-shadow: 0 0 8px rgba(34,197,94,0.9);
-            animation: pulse 1.4s ease-in-out infinite;
-        }
-        @keyframes pulse {
-            0% { transform: scale(1); opacity: 0.9; }
-            50% { transform: scale(1.6); opacity: 0.1; }
-            100% { transform: scale(1); opacity: 0.9; }
-        }
-        .theme-toggle {
-            background: rgba(15,23,42,0.7);
-            border: 1px solid rgba(148,163,184,0.45);
-            border-radius: 999px;
-            width: 30px; height: 30px;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer;
-            color: var(--muted);
-            transition: background 150ms, color 150ms, transform 150ms;
-        }
-        .theme-toggle:hover { background: rgba(15,23,42,1); color: var(--text); transform: translateY(-1px); }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claudex ETHUSD 1H</title>
+  <meta http-equiv="refresh" content="3600">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root,
+    [data-theme="dark"] {
+      --bg: #0b0d13;
+      --surface: #11131b;
+      --surface-2: #151925;
+      --surface-3: #1c2233;
+      --border: rgba(98, 126, 234, 0.24);
+      --border-2: rgba(138, 146, 178, 0.16);
 
-        .grid {
-            display: grid;
-            grid-template-columns: 2fr 1.6fr;
-            gap: 16px;
-        }
-        @media (max-width: 900px) {
-            .grid { grid-template-columns: 1fr; }
-        }
+      --text: #eef2ff;
+      --muted: #a9b3d1;
+      --faint: #5f6885;
 
-        .kpi-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 16px;
-        }
-        .kpi {
-            flex: 1 1 140px;
-            min-width: 120px;
-            padding: 10px 12px;
-            border-radius: var(--radius);
-            border: 1px solid var(--border);
-            background: linear-gradient(135deg, rgba(15,23,42,0.96), rgba(15,23,42,0.8));
-            position: relative;
-            overflow: hidden;
-        }
-        .kpi::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(circle at top left, rgba(96,165,250,0.16), transparent 55%);
-            opacity: 0;
-            transition: opacity 180ms ease-out;
-        }
-        .kpi:hover::after { opacity: 1; }
-        .kpi-value {
-            font-size: 1.4rem;
-            font-weight: 600;
-        }
-        .kpi-label {
-            margin-top: 2px;
-            font-size: 0.7rem;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            color: var(--muted);
-        }
+      --blue: #627eea;
+      --green: #3ddc97;
+      --red: #ff6b81;
+      --yellow: #f5c45b;
+      --purple: #8a92b2;
 
-        .tab-row {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 10px;
-        }
-        .tab-card {
-            position: relative;
-            flex: 1 1 0;
-            padding: 10px 11px;
-            border-radius: var(--radius);
-            border: 1px solid var(--border);
-            background: var(--surface);
-            cursor: default;
-            transition: transform 140ms ease-out, box-shadow 140ms ease-out, border-color 140ms ease-out;
-        }
-        .tab-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 28px rgba(15,23,42,0.55);
-            border-color: rgba(96,165,250,0.8);
-        }
-        .tab-title {
-            font-size: 0.78rem;
-            font-weight: 500;
-            margin-bottom: 2px;
-        }
-        .tab-sub {
-            font-size: 0.72rem;
-            color: var(--muted);
-        }
-        .tab-tooltip {
-            position: absolute;
-            z-index: 10;
-            left: 50%;
-            top: 100%;
-            transform: translate(-50%, 6px);
-            background: rgba(15,23,42,0.97);
-            color: var(--text);
-            border-radius: 6px;
-            padding: 8px 10px;
-            font-size: 0.7rem;
-            line-height: 1.4;
-            width: 220px;
-            border: 1px solid rgba(148,163,184,0.5);
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 150ms ease-out, transform 150ms ease-out;
-        }
-        .tab-card:hover .tab-tooltip {
-            opacity: 1;
-            transform: translate(-50%, 0);
-        }
+      --header-glow: rgba(98, 126, 234, 0.18);
+      --header-glow-2: rgba(138, 146, 178, 0.12);
 
-        .panel {
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--border);
-            background: var(--surface);
-            padding: 12px 14px;
-            margin-bottom: 16px;
-        }
-        .panel-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 8px;
-        }
-        .panel-title {
-            font-size: 0.82rem;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            color: var(--muted);
-        }
-        .panel-tag {
-            font-size: 0.7rem;
-            color: var(--muted);
-        }
+      --font-body: "Inter", -apple-system, system-ui, sans-serif;
+      --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      --radius: 8px;
+      --radius-lg: 14px;
+    }
 
-        .guidance-main {
-            display: flex; align-items: center; gap: 10px; margin-bottom: 6px;
-        }
-        .guidance-pill {
-            font-size: 0.8rem;
-            padding: 5px 9px;
-            border-radius: 999px;
-            border: 1px solid rgba(148,163,184,0.5);
-            background: radial-gradient(circle at top, rgba(34,197,94,0.25), transparent 60%);
-        }
-        .guidance-detail {
-            font-size: 0.75rem;
-            color: var(--muted);
-        }
-        .guidance-meta {
-            margin-top: 4px;
-            font-size: 0.7rem;
-            color: var(--muted);
-        }
+    [data-theme="light"] {
+      --bg: #f3f6fd;
+      --surface: #ffffff;
+      --surface-2: #eef2fb;
+      --surface-3: #e6ebf8;
+      --border: rgba(98, 126, 234, 0.20);
+      --border-2: rgba(98, 126, 234, 0.12);
 
-        .chart-card {
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--border);
-            background: radial-gradient(circle at top, rgba(96,165,250,0.18), rgba(15,23,42,0.96));
-            padding: 10px 12px 4px 12px;
-            height: 230px;
-        }
-        .chart-container {
-            position: relative;
-            width: 100%;
-            height: 170px;
-        }
+      --text: #1c2540;
+      --muted: #62708e;
+      --faint: #96a2bf;
 
-        .table-card {
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--border);
-            background: var(--surface);
-            padding: 10px 12px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.76rem;
-        }
-        thead tr {
-            background: rgba(15,23,42,0.9);
-        }
-        th {
-            text-align: left;
-            padding: 6px 6px;
-            color: var(--muted);
-            font-weight: 500;
-        }
-        td {
-            padding: 5px 6px;
-            border-top: 1px solid var(--border-2);
-        }
-        tbody tr:hover {
-            background: rgba(15,23,42,0.7);
-        }
-        .mono { font-family: var(--font-mono); font-feature-settings: "tnum" 1; }
-        .muted { color: var(--muted); }
+      --blue: #4f6de6;
+      --green: #1fa971;
+      --red: #dd4f68;
+      --yellow: #d69b2d;
+      --purple: #7f87aa;
 
-        .pill {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 999px;
-            padding: 2px 7px;
-            font-size: 0.7rem;
-        }
-        .pill-green  { background: rgba(22,163,74,0.15);  color: #4ade80; }
-        .pill-blue   { background: rgba(37,99,235,0.2);   color: #93c5fd; }
-        .pill-gray   { background: rgba(148,163,184,0.18); color: var(--muted); }
-        .pill-yellow { background: rgba(234,179,8,0.18);   color: #facc15; }
-        .pill-red    { background: rgba(248,113,113,0.18); color: #fecaca; }
-        .pill-purple { background: rgba(129,140,248,0.18); color: #c7d2fe; }
-    </style>
+      --header-glow: rgba(98, 126, 234, 0.10);
+      --header-glow-2: rgba(138, 146, 178, 0.08);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      color-scheme: dark light;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background:
+        radial-gradient(circle at top, var(--header-glow) 0%, transparent 28%),
+        radial-gradient(circle at top right, var(--header-glow-2) 0%, transparent 22%),
+        var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      transition: background 180ms ease, color 180ms ease;
+    }
+
+    .app {
+      max-width: 1180px;
+      margin: 16px auto 32px auto;
+      padding: 0 16px 32px 16px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 18px;
+      border-radius: var(--radius-lg);
+      background: linear-gradient(
+        120deg,
+        color-mix(in srgb, var(--blue) 14%, transparent),
+        color-mix(in srgb, var(--purple) 12%, transparent)
+      );
+      border: 1px solid var(--border);
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.28);
+      margin-bottom: 18px;
+      transition: background 180ms ease, border-color 180ms ease;
+    }
+
+    .header-left h1 {
+      font-size: 1.15rem;
+      letter-spacing: 0.03em;
+    }
+
+    .header-left p {
+      margin-top: 4px;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .model-badge {
+      font-size: 0.72rem;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--surface) 92%, transparent);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .status-label {
+      font-size: 0.72rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--green);
+      box-shadow: 0 0 8px color-mix(in srgb, var(--green) 70%, transparent);
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 0.9; }
+      50% { transform: scale(1.6); opacity: 0.15; }
+      100% { transform: scale(1); opacity: 0.9; }
+    }
+
+    .theme-toggle {
+      background: color-mix(in srgb, var(--surface) 88%, transparent);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      width: 34px;
+      height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--muted);
+      transition: background 150ms ease, color 150ms ease, transform 150ms ease, border-color 150ms ease;
+    }
+
+    .theme-toggle:hover {
+      transform: translateY(-1px);
+      color: var(--text);
+      background: color-mix(in srgb, var(--surface-3) 95%, transparent);
+    }
+
+    .kpi-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .kpi {
+      flex: 1 1 140px;
+      min-width: 120px;
+      padding: 12px 13px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, var(--surface-2), var(--surface));
+      position: relative;
+      overflow: hidden;
+      transition: transform 150ms ease, border-color 150ms ease, background 150ms ease;
+    }
+
+    .kpi:hover {
+      transform: translateY(-1px);
+    }
+
+    .kpi::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top left, color-mix(in srgb, var(--blue) 18%, transparent), transparent 58%);
+      opacity: 0;
+      transition: opacity 180ms ease-out;
+      pointer-events: none;
+    }
+
+    .kpi:hover::after {
+      opacity: 1;
+    }
+
+    .kpi-value {
+      font-size: 1.4rem;
+      font-weight: 700;
+      line-height: 1.1;
+    }
+
+    .kpi-label {
+      margin-top: 4px;
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 2fr 1.6fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 900px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+      .header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .header-right {
+        width: 100%;
+        justify-content: flex-start;
+      }
+    }
+
+    .panel,
+    .chart-card,
+    .table-card {
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, var(--surface-2), var(--surface));
+      transition: background 160ms ease, border-color 160ms ease;
+    }
+
+    .panel {
+      padding: 12px 14px;
+      margin-bottom: 16px;
+    }
+
+    .chart-card {
+      padding: 10px 12px 4px 12px;
+      height: 230px;
+    }
+
+    .table-card {
+      padding: 10px 12px;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+    .panel-title {
+      font-size: 0.82rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .panel-tag {
+      font-size: 0.7rem;
+      color: var(--muted);
+    }
+
+    .guidance-main {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+    .guidance-pill {
+      font-size: 0.8rem;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: radial-gradient(circle at top, color-mix(in srgb, var(--blue) 18%, transparent), transparent 62%);
+      color: var(--text);
+    }
+
+    .guidance-detail {
+      font-size: 0.78rem;
+      color: var(--text);
+      max-width: 72ch;
+    }
+
+    .guidance-meta {
+      margin-top: 5px;
+      font-size: 0.72rem;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .chart-container {
+      position: relative;
+      width: 100%;
+      height: 170px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.76rem;
+    }
+
+    thead tr {
+      background: color-mix(in srgb, var(--surface-3) 90%, transparent);
+    }
+
+    th {
+      text-align: left;
+      padding: 6px 6px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    td {
+      padding: 6px 6px;
+      border-top: 1px solid var(--border-2);
+      color: var(--text);
+    }
+
+    tbody tr:hover {
+      background: color-mix(in srgb, var(--surface-3) 82%, transparent);
+    }
+
+    .mono {
+      font-family: var(--font-mono);
+      font-feature-settings: "tnum" 1;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      padding: 2px 7px;
+      font-size: 0.7rem;
+      white-space: nowrap;
+    }
+
+    .pill-green { background: color-mix(in srgb, var(--green) 14%, transparent); color: var(--green); }
+    .pill-blue { background: color-mix(in srgb, var(--blue) 16%, transparent); color: var(--blue); }
+    .pill-gray { background: color-mix(in srgb, var(--purple) 14%, transparent); color: var(--muted); }
+    .pill-yellow { background: color-mix(in srgb, var(--yellow) 16%, transparent); color: var(--yellow); }
+    .pill-red { background: color-mix(in srgb, var(--red) 16%, transparent); color: var(--red); }
+    .pill-purple { background: color-mix(in srgb, var(--purple) 16%, transparent); color: var(--purple); }
+  </style>
 </head>
 <body>
-<div class="app">
-
+  <div class="app">
     <header class="header">
-        <div class="header-left">
-            <h1>⚡ Claudex · ETHUSD 1H</h1>
-            <p>Self-improving compression specialist · band ge_0.78 · Run 2532c340</p>
-        </div>
-        <div class="header-right">
-            <span class="model-badge">hgb_compression_20260503_134449.joblib</span>
-            <button class="theme-toggle" data-theme-toggle aria-label="Switch to light mode">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2">
-                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-                </svg>
-            </button>
-            <span class="status-label">
-                <span class="status-dot"></span>
-                Live · 2026-05-03 21:18:02 UTC
-            </span>
-        </div>
+      <div class="header-left">
+        <h1>Claudex ETHUSD 1H</h1>
+        <p>Self-improving compression specialist · band ge_0.78 · Run f8ad6213</p>
+      </div>
+      <div class="header-right">
+        <span class="model-badge">hgb_compression_20260503_134449.joblib</span>
+        <button class="theme-toggle" data-theme-toggle aria-label="Switch theme"></button>
+        <span class="status-label">
+          <span class="status-dot"></span>
+          Generated · 2026-05-04 13:05:41 UTC
+        </span>
+      </div>
     </header>
 
-    <!-- KPI + Tabs row -->
     <section style="margin-bottom:14px;">
-        <div class="kpi-row">
-            <div class="kpi">
-                <div class="kpi-value" style="color:var(--red);">
-                    -0.32%
-                </div>
-                <div class="kpi-label">Total Return</div>
-            </div>
-            <div class="kpi">
-                <div class="kpi-value" style="color:var(--yellow);">
-                    53.8%
-                </div>
-                <div class="kpi-label">Win Rate</div>
-            </div>
-            <div class="kpi">
-                <div class="kpi-value">13</div>
-                <div class="kpi-label">Live Trades</div>
-            </div>
-            <div class="kpi">
-                <div class="kpi-value">1</div>
-                <div class="kpi-label">Signals Emitted</div>
-            </div>
-            <div class="kpi">
-                <div class="kpi-value" style="color:var(--green);">
-                    1.74
-                </div>
-                <div class="kpi-label">WF Profit Factor</div>
-            </div>
-            <div class="kpi">
-                <div class="kpi-value" style="color:var(--yellow);">
-                    10
-                </div>
-                <div class="kpi-label">Drift Events</div>
-            </div>
+      <div class="kpi-row">
+        <div class="kpi">
+          <div class="kpi-value" style="color:var(--green);">0.00%</div>
+          <div class="kpi-label">Total Return</div>
         </div>
-
-        <!-- Tab-cards with hover tooltips -->
-        <div class="tab-row">
-            <div class="tab-card">
-                <div class="tab-title">Model Health</div>
-                <div class="tab-sub">PF 1.74 · OOS +2.15%</div>
-                <div class="tab-tooltip">
-                    Walk-forward validated edge for the currently active specialist
-                    at band ge_0.78. Profit factor and OOS return drive whether
-                    retrains are promoted.
-                </div>
-            </div>
-            <div class="tab-card">
-                <div class="tab-title">Drift Monitor</div>
-                <div class="tab-sub">10 recent events</div>
-                <div class="tab-tooltip">
-                    Drift checker compares recent paper-trade PF and win rate
-                    against the baseline band result. If PF falls below 90% of
-                    baseline, a retrain is queued.
-                </div>
-            </div>
-            <div class="tab-card">
-                <div class="tab-title">Signal Quality</div>
-                <div class="tab-sub">1 live signals</div>
-                <div class="tab-tooltip">
-                    High-confidence compression signals filtered by calibrated
-                    rel_score ≥ 0.78. Each signal emits email + toast once.
-                </div>
-            </div>
+        <div class="kpi">
+          <div class="kpi-value" style="color:var(--yellow);">0.0%</div>
+          <div class="kpi-label">Win Rate</div>
         </div>
+        <div class="kpi">
+          <div class="kpi-value">0</div>
+          <div class="kpi-label">Recent Trades</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-value">1</div>
+          <div class="kpi-label">Signals Emitted</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-value" style="color:var(--green);">1.74</div>
+          <div class="kpi-label">WF Profit Factor</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-value" style="color:var(--yellow);">20</div>
+          <div class="kpi-label">Drift Events</div>
+        </div>
+      </div>
     </section>
 
-    <div class="grid">
-        <!-- LEFT: Guidance + Equity -->
+    <section>
+      <div class="grid">
         <div>
-            <div class="panel">
-                <div class="panel-header">
-                    <span class="panel-title">Trade Guidance (Model View)</span>
-                    <span class="panel-tag">Not financial advice — model signal only</span>
-                </div>
-                <div class="guidance-main">
-                    <span class="guidance-pill mono">CALL · BUY</span>
-                    <div class="guidance-detail">Strong upside compression signal in compression. Consider call / long exposure from ~2304 with next 24–48h horizon.</div>
-                </div>
-                <div class="guidance-meta">
-                    Option type: <span class="mono">CALL</span> · Side:
-                    <span class="mono">BUY</span> · Target date:
-                    <span class="mono">2026-05-04</span>
-                </div>
+          <div class="panel">
+            <div class="panel-header">
+              <span class="panel-title">Trade Guidance · Model View</span>
+              <span class="panel-tag">Prediction-driven summary</span>
             </div>
+            <div class="guidance-main">
+              <span class="guidance-pill mono">No action</span>
+              <div class="guidance-detail">Model is neutral — no fresh high-confidence setup.</div>
+            </div>
+            <div class="guidance-meta">
+              Option type <span class="mono">NONE</span> ·
+              Side <span class="mono">NONE</span> ·
+              Strike ref <span class="mono">N/A</span> ·
+              Target date <span class="mono">2026-05-04</span> ·
+              Confidence <span class="mono">0.0%</span>
+            </div>
+            <div class="guidance-meta">
+              Market <span class="mono">LIVE</span> ·
+              Predictions <span class="mono">LIVE</span> ·
+              Trades <span class="mono">NO RECENT TRADES</span> ·
+              Last run <span class="mono">2026-05-04 04:05</span> ·
+              Source <span class="mono">latest prediction</span>
+            </div>
+          </div>
 
-            <div class="chart-card">
-                <div class="panel-header" style="margin-bottom:4px;">
-                    <span class="panel-title">Equity Curve · Paper Account</span>
-                    <span class="panel-tag">Base 100,000 · 2026-05-04 02:14</span>
-                </div>
-                <div class="chart-container">
-                    <canvas id="equityChart"></canvas>
-                </div>
+          <div class="chart-card">
+            <div class="panel-header" style="margin-bottom:4px;">
+              <span class="panel-title">Equity Curve · Recent Paper Account</span>
+              <span class="panel-tag">Base 100,000.0 · last 14d</span>
             </div>
+            <div class="chart-container">
+              <canvas id="equityChart"></canvas>
+            </div>
+          </div>
 
-            <div class="table-card">
-                <div class="panel-header">
-                    <span class="panel-title">Recent Trades (Last 20)</span>
-                    <span class="panel-tag">Live paper_trades</span>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Entry</th><th>Entry $</th><th>Exit $</th>
-                            <th>Conf</th><th>Exit</th>
-                            <th>Return</th><th>PnL</th><th>Hold</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        
-                <tr>
-                    <td>2026-01-25 17:30</td>
-                    <td class="mono">2942.38</td>
-                    <td class="mono">2893.7</td>
-                    <td><span class="pill pill-blue">0.802</span></td>
-                    <td><span class="pill pill-gray">stop_loss</span></td>
-                    <td class="mono" style="color:var(--red)">❌ -1.764%</td>
-                    <td class="mono" style="color:var(--red)">$-1,093.94</td>
-                    <td class="mono">3h</td>
-                </tr>
-                <tr>
-                    <td>2026-01-12 04:30</td>
-                    <td class="mono">3123.45</td>
-                    <td class="mono">3141.5</td>
-                    <td><span class="pill pill-blue">0.901</span></td>
-                    <td><span class="pill pill-gray">time_exit</span></td>
-                    <td class="mono" style="color:var(--green)">✅ +0.468%</td>
-                    <td class="mono" style="color:var(--green)">$+364.60</td>
-                    <td class="mono">12h</td>
-                </tr>
-                <tr>
-                    <td>2026-01-04 12:30</td>
-                    <td class="mono">3141.29</td>
-                    <td class="mono">3182.94</td>
-                    <td><span class="pill pill-blue">0.898</span></td>
-                    <td><span class="pill pill-gray">time_exit</span></td>
-                    <td class="mono" style="color:var(--green)">✅ +1.216%</td>
-                    <td class="mono" style="color:var(--green)">$+1,014.93</td>
-                    <td class="mono">12h</td>
-                </tr>
-                <tr>
-                    <td>2026-01-02 14:30</td>
-                    <td class="mono">3048.15</td>
-                    <td class="mono">3149.51</td>
-                    <td><span class="pill pill-blue">0.858</span></td>
-                    <td><span class="pill pill-gray">take_profit</span></td>
-                    <td class="mono" style="color:var(--green)">✅ +3.214%</td>
-                    <td class="mono" style="color:var(--green)">$+1,867.98</td>
-                    <td class="mono">6h</td>
-                </tr>
-                <tr>
-                    <td>2025-12-28 15:30</td>
-                    <td class="mono">2943.34</td>
-                    <td class="mono">2927.2</td>
-                    <td><span class="pill pill-blue">0.809</span></td>
-                    <td><span class="pill pill-gray">time_exit</span></td>
-                    <td class="mono" style="color:var(--red)">❌ -0.658%</td>
-                    <td class="mono" style="color:var(--red)">$-488.57</td>
-                    <td class="mono">12h</td>
-                </tr>
-                <tr>
-                    <td>2025-12-21 07:30</td>
-                    <td class="mono">2965.72</td>
-                    <td class="mono">3023.8</td>
-                    <td><span class="pill pill-blue">0.899</span></td>
-                    <td><span class="pill pill-gray">time_exit</span></td>
-                    <td class="mono" style="color:var(--green)">✅ +1.848%</td>
-                    <td class="mono" style="color:var(--green)">$+884.87</td>
-                    <td class="mono">12h</td>
-                </tr>
-                <tr>
-                    <td>2025-11-29 20:30</td>
-                    <td class="mono">3007.41</td>
-                    <td class="mono">2951.61</td>
-                    <td><span class="pill pill-blue">0.799</span></td>
-                    <td><span class="pill pill-gray">stop_loss</span></td>
-                    <td class="mono" style="color:var(--red)">❌ -1.965%</td>
-                    <td class="mono" style="color:var(--red)">$-1,056.53</td>
-                    <td class="mono">8h</td>
-                </tr>
-                <tr>
-                    <td>2025-10-25 23:30</td>
-                    <td class="mono">3959.68</td>
-                    <td class="mono">4079.38</td>
-                    <td><span class="pill pill-blue">0.995</span></td>
-                    <td><span class="pill pill-gray">time_exit</span></td>
-                    <td class="mono" style="color:var(--green)">✅ +2.912%</td>
-                    <td class="mono" style="color:var(--green)">$+811.26</td>
-                    <td class="mono">12h</td>
-                </tr>
-                <tr>
-                    <td>2025-09-27 22:30</td>
-                    <td class="mono">4001.68</td>
-                    <td class="mono">4101.98</td>
-                    <td><span class="pill pill-blue">0.993</span></td>
-                    <td><span class="pill pill-gray">time_exit</span></td>
-                    <td class="mono" style="color:var(--green)">✅ +2.396%</td>
-                    <td class="mono" style="color:var(--green)">$+582.50</td>
-                    <td class="mono">12h</td>
-                </tr>
-                <tr>
-                    <td>2025-09-21 21:30</td>
-                    <td class="mono">4476.83</td>
-                    <td class="mono">4413.46</td>
-                    <td><span class="pill pill-blue">0.959</span></td>
-                    <td><span class="pill pill-gray">stop_loss</span></td>
-                    <td class="mono" style="color:var(--red)">❌ -1.525%</td>
-                    <td class="mono" style="color:var(--red)">$-1,076.94</td>
-                    <td class="mono">6h</td>
-                </tr>
-                <tr>
-                    <td>2025-09-19 17:30</td>
-                    <td class="mono">4518.59</td>
-                    <td class="mono">4452.2</td>
-                    <td><span class="pill pill-blue">0.839</span></td>
-                    <td><span class="pill pill-gray">stop_loss</span></td>
-                    <td class="mono" style="color:var(--red)">❌ -1.579%</td>
-                    <td class="mono" style="color:var(--red)">$-1,085.16</td>
-                    <td class="mono">2h</td>
-                </tr>
-                <tr>
-                    <td>2025-09-09 18:30</td>
-                    <td class="mono">4347.42</td>
-                    <td class="mono">4292.32</td>
-                    <td><span class="pill pill-blue">0.966</span></td>
-                    <td><span class="pill pill-gray">stop_loss</span></td>
-                    <td class="mono" style="color:var(--red)">❌ -1.377%</td>
-                    <td class="mono" style="color:var(--red)">$-1,113.23</td>
-                    <td class="mono">1h</td>
-                </tr>
-                <tr>
-                    <td>2025-09-07 13:30</td>
-                    <td class="mono">4301.14</td>
-                    <td class="mono">4311.12</td>
-                    <td><span class="pill pill-blue">0.922</span></td>
-                    <td><span class="pill pill-gray">time_exit</span></td>
-                    <td class="mono" style="color:var(--green)">✅ +0.122%</td>
-                    <td class="mono" style="color:var(--green)">$+67.14</td>
-                    <td class="mono">12h</td>
-                </tr>
-                    </tbody>
-                </table>
+          <div class="table-card" style="margin-top:12px;">
+            <div class="panel-header">
+              <span class="panel-title">Recent Trades · Last 50</span>
+              <span class="panel-tag">Filtered to recent write activity</span>
             </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Entry</th>
+                  <th>Entry</th>
+                  <th>Exit</th>
+                  <th>Conf</th>
+                  <th>Exit</th>
+                  <th>Return %</th>
+                  <th>PnL</th>
+                  <th>Hold</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td colspan='8' class='muted' style='text-align:center;padding:10px;'>No recent trades</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        <!-- RIGHT: ETH chart + signals + runs -->
         <div>
-            <div class="chart-card">
-                <div class="panel-header" style="margin-bottom:4px;">
-                    <span class="panel-title">ETHUSD · Nowcast + Hypothetical</span>
-                    <span class="panel-tag">Last 96h closes · dashed line = hypothetical</span>
-                </div>
-                <div class="chart-container">
-                    <canvas id="priceChart"></canvas>
-                </div>
+          <div class="chart-card">
+            <div class="panel-header" style="margin-bottom:4px;">
+              <span class="panel-title">ETHUSD · Nowcast + Hypothetical</span>
+              <span class="panel-tag">Last 96h closes · dashed line = hypothetical</span>
             </div>
+            <div class="chart-container">
+              <canvas id="priceChart"></canvas>
+            </div>
+          </div>
 
-            <div class="table-card" style="margin-top:12px;">
-                <div class="panel-header">
-                    <span class="panel-title">Recent Signals</span>
-                    <span class="panel-tag">Latest 10 · rel_score band ≥ 0.78</span>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Emitted</th><th>Bar Open</th><th>Rel%</th><th>Close</th><th>Regime</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        
-                <tr>
-                    <td>2026-05-03 20:24</td>
-                    <td>2026-05-03 06:00</td>
-                    <td><span class="pill pill-green">96.9%</span></td>
-                    <td class="mono">$2304.49</td>
-                    <td><span class="pill pill-blue">compression</span></td>
-                </tr>
-                    </tbody>
-                </table>
+          <div class="table-card" style="margin-top:12px;">
+            <div class="panel-header">
+              <span class="panel-title">Recent Signals</span>
+              <span class="panel-tag">Latest 10 · rel_score band ≥ 0.78</span>
             </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Emitted</th>
+                  <th>Bar Open</th>
+                  <th>Rel%</th>
+                  <th>Close</th>
+                  <th>Regime</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                <tr>
+                  <td>2026-05-03 20:24</td>
+                  <td>2026-05-03 06:00</td>
+                  <td><span class="pill pill-green">96.9</span></td>
+                  <td class="mono">2304.49</td>
+                  <td><span class="pill pill-blue">compression</span></td>
+                </tr>
+                
+              </tbody>
+            </table>
+          </div>
 
-            <div class="table-card" style="margin-top:12px;">
-                <div class="panel-header">
-                    <span class="panel-title">Orchestrator Runs</span>
-                    <span class="panel-tag">Last 10 runs</span>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Started (UTC)</th><th>Run ID</th><th>Status</th>
-                            <th>New</th><th>Drift</th><th>Retrain</th><th>Signals</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        
-                <tr>
-                    <td class="mono">2026-05-04 02:14:17</td>
-                    <td class="mono muted">da4b27f0</td>
-                    <td><span class="pill pill-green">OK</span></td>
-                    <td class="mono">0</td>
-                    <td><span class="pill pill-yellow">DRIFT</span></td>
-                    <td>—</td>
-                    <td class="mono">0</td>
-                </tr>
-                <tr>
-                    <td class="mono">2026-05-04 02:13:05</td>
-                    <td class="mono muted">b8d920d1</td>
-                    <td><span class="pill pill-green">OK</span></td>
-                    <td class="mono">0</td>
-                    <td><span class="pill pill-yellow">DRIFT</span></td>
-                    <td>—</td>
-                    <td class="mono">0</td>
-                </tr>
-                <tr>
-                    <td class="mono">2026-05-04 02:05:05</td>
-                    <td class="mono muted">e27eb163</td>
-                    <td><span class="pill pill-green">OK</span></td>
-                    <td class="mono">0</td>
-                    <td><span class="pill pill-yellow">DRIFT</span></td>
-                    <td>—</td>
-                    <td class="mono">0</td>
-                </tr>
-                <tr>
-                    <td class="mono">2026-05-04 01:55:46</td>
-                    <td class="mono muted">099e4c0c</td>
-                    <td><span class="pill pill-green">OK</span></td>
-                    <td class="mono">0</td>
-                    <td><span class="pill pill-yellow">DRIFT</span></td>
-                    <td>—</td>
-                    <td class="mono">0</td>
-                </tr>
-                <tr>
-                    <td class="mono">2026-05-04 01:54:08</td>
-                    <td class="mono muted">8734cb9b</td>
-                    <td><span class="pill pill-green">OK</span></td>
-                    <td class="mono">0</td>
-                    <td><span class="pill pill-yellow">DRIFT</span></td>
-                    <td>—</td>
-                    <td class="mono">1</td>
-                </tr>
-                <tr>
-                    <td class="mono">2026-05-04 01:49:23</td>
-                    <td class="mono muted">49111df1</td>
-                    <td><span class="pill pill-green">OK</span></td>
-                    <td class="mono">0</td>
-                    <td><span class="pill pill-yellow">DRIFT</span></td>
-                    <td><span class="pill pill-purple">YES</span></td>
-                    <td class="mono">1</td>
-                </tr>
-                <tr>
-                    <td class="mono">2026-05-04 01:40:40</td>
-                    <td class="mono muted">542b6312</td>
-                    <td><span class="pill pill-green">OK</span></td>
-                    <td class="mono">0</td>
-                    <td><span class="pill pill-yellow">DRIFT</span></td>
-                    <td><span class="pill pill-purple">YES</span></td>
-                    <td class="mono">1</td>
-                </tr>
-                <tr>
-                    <td class="mono">2026-05-04 01:37:33</td>
-                    <td class="mono muted">53a113eb</td>
-                    <td><span class="pill pill-green">OK</span></td>
-                    <td class="mono">1</td>
-                    <td><span class="pill pill-yellow">DRIFT</span></td>
-                    <td><span class="pill pill-purple">YES</span></td>
-                    <td class="mono">1</td>
-                </tr>
-                <tr>
-                    <td class="mono">2026-05-04 01:34:48</td>
-                    <td class="mono muted">cfc3c616</td>
-                    <td><span class="pill pill-green">OK</span></td>
-                    <td class="mono">0</td>
-                    <td><span class="pill pill-yellow">DRIFT</span></td>
-                    <td><span class="pill pill-purple">YES</span></td>
-                    <td class="mono">1</td>
-                </tr>
-                <tr>
-                    <td class="mono">2026-05-04 01:25:08</td>
-                    <td class="mono muted">4f447fa7</td>
-                    <td><span class="pill pill-green">OK</span></td>
-                    <td class="mono">0</td>
-                    <td><span class="pill pill-yellow">DRIFT</span></td>
-                    <td><span class="pill pill-purple">YES</span></td>
-                    <td class="mono">1</td>
-                </tr>
-                    </tbody>
-                </table>
+          <div class="table-card" style="margin-top:12px;">
+            <div class="panel-header">
+              <span class="panel-title">Orchestrator Runs</span>
+              <span class="panel-tag">Last 10 runs</span>
             </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Started UTC</th>
+                  <th>Run ID</th>
+                  <th>Status</th>
+                  <th>New</th>
+                  <th>Drift</th>
+                  <th>Retrain</th>
+                  <th>Signals</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                <tr>
+                  <td class="mono">2026-05-04 04:05</td>
+                  <td class="mono muted">c0b6960f</td>
+                  <td><span class="pill pill-green">OK</span></td>
+                  <td class="mono">0</td>
+                  <td><span class="pill pill-yellow">DRIFT</span></td>
+                  <td><span class="pill pill-gray">NO</span></td>
+                  <td class="mono">0</td>
+                </tr>
+                
+                <tr>
+                  <td class="mono">2026-05-04 04:04</td>
+                  <td class="mono muted">a0173739</td>
+                  <td><span class="pill pill-green">OK</span></td>
+                  <td class="mono">0</td>
+                  <td><span class="pill pill-yellow">DRIFT</span></td>
+                  <td><span class="pill pill-gray">NO</span></td>
+                  <td class="mono">0</td>
+                </tr>
+                
+                <tr>
+                  <td class="mono">2026-05-04 03:46</td>
+                  <td class="mono muted">25c83683</td>
+                  <td><span class="pill pill-green">OK</span></td>
+                  <td class="mono">1</td>
+                  <td><span class="pill pill-yellow">DRIFT</span></td>
+                  <td><span class="pill pill-gray">NO</span></td>
+                  <td class="mono">0</td>
+                </tr>
+                
+                <tr>
+                  <td class="mono">2026-05-04 03:29</td>
+                  <td class="mono muted">781d021b</td>
+                  <td><span class="pill pill-green">OK</span></td>
+                  <td class="mono">0</td>
+                  <td><span class="pill pill-yellow">DRIFT</span></td>
+                  <td><span class="pill pill-gray">NO</span></td>
+                  <td class="mono">0</td>
+                </tr>
+                
+                <tr>
+                  <td class="mono">2026-05-04 03:14</td>
+                  <td class="mono muted">68cd0d1a</td>
+                  <td><span class="pill pill-green">OK</span></td>
+                  <td class="mono">0</td>
+                  <td><span class="pill pill-yellow">DRIFT</span></td>
+                  <td><span class="pill pill-gray">NO</span></td>
+                  <td class="mono">0</td>
+                </tr>
+                
+                <tr>
+                  <td class="mono">2026-05-04 03:07</td>
+                  <td class="mono muted">98150880</td>
+                  <td><span class="pill pill-green">OK</span></td>
+                  <td class="mono">0</td>
+                  <td><span class="pill pill-yellow">DRIFT</span></td>
+                  <td><span class="pill pill-gray">NO</span></td>
+                  <td class="mono">0</td>
+                </tr>
+                
+                <tr>
+                  <td class="mono">2026-05-04 03:05</td>
+                  <td class="mono muted">dab9f1c7</td>
+                  <td><span class="pill pill-green">OK</span></td>
+                  <td class="mono">0</td>
+                  <td><span class="pill pill-yellow">DRIFT</span></td>
+                  <td><span class="pill pill-gray">NO</span></td>
+                  <td class="mono">0</td>
+                </tr>
+                
+                <tr>
+                  <td class="mono">2026-05-04 02:47</td>
+                  <td class="mono muted">2532c340</td>
+                  <td><span class="pill pill-green">OK</span></td>
+                  <td class="mono">1</td>
+                  <td><span class="pill pill-yellow">DRIFT</span></td>
+                  <td><span class="pill pill-gray">NO</span></td>
+                  <td class="mono">0</td>
+                </tr>
+                
+                <tr>
+                  <td class="mono">2026-05-04 02:14</td>
+                  <td class="mono muted">da4b27f0</td>
+                  <td><span class="pill pill-green">OK</span></td>
+                  <td class="mono">0</td>
+                  <td><span class="pill pill-yellow">DRIFT</span></td>
+                  <td><span class="pill pill-gray">NO</span></td>
+                  <td class="mono">0</td>
+                </tr>
+                
+                <tr>
+                  <td class="mono">2026-05-04 02:13</td>
+                  <td class="mono muted">b8d920d1</td>
+                  <td><span class="pill pill-green">OK</span></td>
+                  <td class="mono">0</td>
+                  <td><span class="pill pill-yellow">DRIFT</span></td>
+                  <td><span class="pill pill-gray">NO</span></td>
+                  <td class="mono">0</td>
+                </tr>
+                
+              </tbody>
+            </table>
+          </div>
         </div>
-    </div>
-</div>
+      </div>
+    </section>
+  </div>
 
-<script>
-(function() {
-    // ── Theme toggle ──────────────────────────────────────────────────────
-    const root   = document.documentElement;
-    const toggle = document.querySelector('[data-theme-toggle]');
-    let theme    = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  <script>
+    (function () {
+      const root = document.documentElement;
+      const toggle = document.querySelector("[data-theme-toggle]");
 
-    function applyTheme(t) {
-        theme = t;
-        root.setAttribute('data-theme', t);
-        if (toggle) {
-            toggle.setAttribute('aria-label',
-                'Switch to ' + (t === 'dark' ? 'light' : 'dark') + ' mode');
-            toggle.innerHTML = t === 'dark'
-                ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'
-                : '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>';
-        }
-    }
-    applyTheme(theme);
-    toggle && toggle.addEventListener('click', () =>
-        applyTheme(theme === 'dark' ? 'light' : 'dark')
-    );
+      const sunIcon = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4"></circle>
+          <path d="M12 2v2"></path>
+          <path d="M12 20v2"></path>
+          <path d="m4.93 4.93 1.41 1.41"></path>
+          <path d="m17.66 17.66 1.41 1.41"></path>
+          <path d="M2 12h2"></path>
+          <path d="M20 12h2"></path>
+          <path d="m6.34 17.66-1.41 1.41"></path>
+          <path d="m19.07 4.93-1.41 1.41"></path>
+        </svg>`;
 
-    // ── Equity chart ──────────────────────────────────────────────────────
-    const eqLabels = ["2025-09-07 13:30", "2025-09-09 18:30", "2025-09-19 17:30", "2025-09-21 21:30", "2025-09-27 22:30", "2025-10-25 23:30", "2025-11-29 20:30", "2025-12-21 07:30", "2025-12-28 15:30", "2026-01-02 14:30", "2026-01-04 12:30", "2026-01-12 04:30", "2026-01-25 17:30"];
-    const eqValues = [0.067, -1.046, -2.131, -3.208, -2.626, -1.814, -2.871, -1.986, -2.475, -0.607, 0.408, 0.773, -0.321];
-    if (eqLabels.length && eqValues.length) {
-        new Chart(document.getElementById('equityChart'), {
-            type: 'line',
-            data: {
-                labels: eqLabels,
-                datasets: [{
-                    label: 'Equity Return %',
-                    data: eqValues,
-                    borderColor: '#60a5fa',
-                    backgroundColor: 'rgba(96,165,250,0.18)',
-                    borderWidth: 2,
-                    pointRadius: 0,
-                    pointHitRadius: 6,
-                    fill: true,
-                    tension: 0.35,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false,
-                    },
-                },
-                scales: {
-                    x: {
-                        ticks: { color: '#9ca3af', maxTicksLimit: 7 },
-                        grid: { color: 'rgba(31,41,55,0.6)' },
-                    },
-                    y: {
-                        ticks: { color: '#9ca3af', callback: v => v + '%' },
-                        grid: { color: 'rgba(31,41,55,0.6)' },
-                    },
-                },
-            }
+      const moonIcon = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"></path>
+        </svg>`;
+
+      let theme = (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches)
+        ? "light"
+        : "dark";
+
+      function applyTheme() {
+        root.setAttribute("data-theme", theme);
+        if (!toggle) return;
+        toggle.innerHTML = theme === "dark" ? sunIcon : moonIcon;
+        toggle.setAttribute(
+          "aria-label",
+          "Switch to " + (theme === "dark" ? "light" : "dark") + " mode"
+        );
+      }
+
+      applyTheme();
+
+      if (toggle) {
+        toggle.addEventListener("click", function () {
+          theme = theme === "dark" ? "light" : "dark";
+          applyTheme();
         });
-    }
+      }
+    })();
 
-    // ── ETH nowcast + hypothetical chart ──────────────────────────────────
-    const pLabels = ["2026-04-29 22:00", "2026-04-29 23:00", "2026-04-30 00:00", "2026-04-30 01:00", "2026-04-30 02:00", "2026-04-30 03:00", "2026-04-30 04:00", "2026-04-30 05:00", "2026-04-30 06:00", "2026-04-30 07:00", "2026-04-30 08:00", "2026-04-30 09:00", "2026-04-30 10:00", "2026-04-30 11:00", "2026-04-30 12:00", "2026-04-30 13:00", "2026-04-30 14:00", "2026-04-30 15:00", "2026-04-30 16:00", "2026-04-30 17:00", "2026-04-30 18:00", "2026-04-30 19:00", "2026-04-30 20:00", "2026-04-30 21:00", "2026-04-30 22:00", "2026-04-30 23:00", "2026-05-01 00:00", "2026-05-01 01:00", "2026-05-01 02:00", "2026-05-01 03:00", "2026-05-01 04:00", "2026-05-01 05:00", "2026-05-01 06:00", "2026-05-01 07:00", "2026-05-01 08:00", "2026-05-01 09:00", "2026-05-01 10:00", "2026-05-01 11:00", "2026-05-01 12:00", "2026-05-01 13:00", "2026-05-01 14:00", "2026-05-01 15:00", "2026-05-01 16:00", "2026-05-01 17:00", "2026-05-01 18:00", "2026-05-01 19:00", "2026-05-01 20:00", "2026-05-01 21:00", "2026-05-01 22:00", "2026-05-01 23:00", "2026-05-02 00:00", "2026-05-02 01:00", "2026-05-02 02:00", "2026-05-02 03:00", "2026-05-02 04:00", "2026-05-02 05:00", "2026-05-02 06:00", "2026-05-02 07:00", "2026-05-02 08:00", "2026-05-02 09:00", "2026-05-02 10:00", "2026-05-02 11:00", "2026-05-02 12:00", "2026-05-02 13:00", "2026-05-02 14:00", "2026-05-02 15:00", "2026-05-02 16:00", "2026-05-02 17:00", "2026-05-02 18:00", "2026-05-02 19:00", "2026-05-02 20:00", "2026-05-02 21:00", "2026-05-02 22:00", "2026-05-02 23:00", "2026-05-03 00:00", "2026-05-03 01:00", "2026-05-03 02:00", "2026-05-03 03:00", "2026-05-03 04:00", "2026-05-03 05:00", "2026-05-03 06:00", "2026-05-03 07:00", "2026-05-03 08:00", "2026-05-03 09:00", "2026-05-03 10:00", "2026-05-03 11:00", "2026-05-03 12:00", "2026-05-03 13:00", "2026-05-03 14:00", "2026-05-03 15:00", "2026-05-03 16:00", "2026-05-03 17:00", "2026-05-03 18:00", "2026-05-03 19:00", "2026-05-03 20:00", "2026-05-03 21:00"];
-    const pNow    = [2257.78, 2252.9, 2272.46, 2269.35, 2245.13, 2253.24, 2238.97, 2242.76, 2248.03, 2260.31, 2256.65, 2261.86, 2262.01, 2258.18, 2265.45, 2263.9, 2262.01, 2265.7, 2257.24, 2258.14, 2259.84, 2261.99, 2264.34, 2256.29, 2254.25, 2257.51, 2260.0, 2267.75, 2266.94, 2282.87, 2280.12, 2283.26, 2277.45, 2279.48, 2286.92, 2282.07, 2282.53, 2286.45, 2301.36, 2318.22, 2308.04, 2307.64, 2301.94, 2311.76, 2304.76, 2304.85, 2285.19, 2292.68, 2293.5, 2295.63, 2297.6, 2298.63, 2303.31, 2304.44, 2301.26, 2299.47, 2305.58, 2301.02, 2303.35, 2305.13, 2303.54, 2302.1, 2303.52, 2308.08, 2306.69, 2309.19, 2309.31, 2305.9, 2310.3, 2311.08, 2311.58, 2325.62, 2327.0, 2316.97, 2313.98, 2304.14, 2303.41, 2301.9, 2301.53, 2304.11, 2304.49, 2309.28, 2308.28, 2316.47, 2311.54, 2319.63, 2325.71, 2326.41, 2325.97, 2328.44, 2325.6, 2331.85, 2330.98, 2330.3, 2334.83, 2331.24];
-    const pFut    = [None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 2331.24, 2331.71, 2332.09];
-    if (pLabels.length && pNow.length) {
-        new Chart(document.getElementById('priceChart'), {
-            type: 'line',
-            data: {
-                labels: pLabels.concat(pFut.length ? ['+1h','+2h'] : []),
-                datasets: [
-                    {
-                        label: 'ETHUSD close',
-                        data: pNow,
-                        borderColor: '#34d399',
-                        backgroundColor: 'rgba(16,185,129,0.16)',
-                        borderWidth: 2,
-                        pointRadius: 0,
-                        pointHitRadius: 6,
-                        fill: true,
-                        tension: 0.3,
-                    },
-                    pFut.length ? {
-                        label: 'Hypothetical path',
-                        data: pFut,
-                        borderColor: '#fbbf24',
-                        borderWidth: 1.5,
-                        borderDash: [5,4],
-                        pointRadius: 0,
-                        fill: false,
-                        tension: 0.4,
-                    } : null,
-                ].filter(Boolean)
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(2)
-                        },
-                    },
-                },
-                scales: {
-                    x: {
-                        ticks: { color: '#9ca3af', maxTicksLimit: 7 },
-                        grid: { color: 'rgba(31,41,55,0.6)' },
-                    },
-                    y: {
-                        ticks: { color: '#9ca3af' },
-                        grid: { color: 'rgba(31,41,55,0.6)' },
-                    },
-                },
+    (function () {
+      const labels = [];
+      const values = [];
+      const ctx = document.getElementById("equityChart");
+      if (!ctx) return;
+
+      if (!labels.length) {
+        ctx.parentElement.innerHTML = '<div class="muted" style="padding:24px 8px;">No recent trade-equity points available.</div>';
+        return;
+      }
+
+      new Chart(ctx, {
+        type: "line",
+        data: {
+          labels,
+          datasets: [{
+            label: "Equity Return %",
+            data: values,
+            borderColor: "#627eea",
+            backgroundColor: "rgba(98,126,234,0.12)",
+            borderWidth: 2,
+            pointRadius: 1.6,
+            fill: true,
+            tension: 0.35,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return "Return: " + context.parsed.y.toFixed(2) + "%";
+                }
+              }
             }
-        });
-    }
-})();
-</script>
+          },
+          scales: {
+            x: {
+              ticks: { color: getComputedStyle(document.documentElement).getPropertyValue("--muted"), maxTicksLimit: 6 },
+              grid: { color: "rgba(127,135,170,0.18)" },
+            },
+            y: {
+              ticks: {
+                color: getComputedStyle(document.documentElement).getPropertyValue("--muted"),
+                callback: function(v) { return v + "%"; }
+              },
+              grid: { color: "rgba(127,135,170,0.18)" },
+            },
+          },
+        },
+      });
+    })();
 
+    (function () {
+      const labels = ["2026-04-30 14:00", "2026-04-30 15:00", "2026-04-30 16:00", "2026-04-30 17:00", "2026-04-30 18:00", "2026-04-30 19:00", "2026-04-30 20:00", "2026-04-30 21:00", "2026-04-30 22:00", "2026-04-30 23:00", "2026-05-01 00:00", "2026-05-01 01:00", "2026-05-01 02:00", "2026-05-01 03:00", "2026-05-01 04:00", "2026-05-01 05:00", "2026-05-01 06:00", "2026-05-01 07:00", "2026-05-01 08:00", "2026-05-01 09:00", "2026-05-01 10:00", "2026-05-01 11:00", "2026-05-01 12:00", "2026-05-01 13:00", "2026-05-01 14:00", "2026-05-01 15:00", "2026-05-01 16:00", "2026-05-01 17:00", "2026-05-01 18:00", "2026-05-01 19:00", "2026-05-01 20:00", "2026-05-01 21:00", "2026-05-01 22:00", "2026-05-01 23:00", "2026-05-02 00:00", "2026-05-02 01:00", "2026-05-02 02:00", "2026-05-02 03:00", "2026-05-02 04:00", "2026-05-02 05:00", "2026-05-02 06:00", "2026-05-02 07:00", "2026-05-02 08:00", "2026-05-02 09:00", "2026-05-02 10:00", "2026-05-02 11:00", "2026-05-02 12:00", "2026-05-02 13:00", "2026-05-02 14:00", "2026-05-02 15:00", "2026-05-02 16:00", "2026-05-02 17:00", "2026-05-02 18:00", "2026-05-02 19:00", "2026-05-02 20:00", "2026-05-02 21:00", "2026-05-02 22:00", "2026-05-02 23:00", "2026-05-03 00:00", "2026-05-03 01:00", "2026-05-03 02:00", "2026-05-03 03:00", "2026-05-03 04:00", "2026-05-03 05:00", "2026-05-03 06:00", "2026-05-03 07:00", "2026-05-03 08:00", "2026-05-03 09:00", "2026-05-03 10:00", "2026-05-03 11:00", "2026-05-03 12:00", "2026-05-03 13:00", "2026-05-03 14:00", "2026-05-03 15:00", "2026-05-03 16:00", "2026-05-03 17:00", "2026-05-03 18:00", "2026-05-03 19:00", "2026-05-03 20:00", "2026-05-03 21:00", "2026-05-03 22:00", "2026-05-03 23:00", "2026-05-04 00:00", "2026-05-04 01:00", "2026-05-04 02:00", "2026-05-04 03:00", "2026-05-04 04:00", "2026-05-04 05:00", "2026-05-04 06:00", "2026-05-04 07:00", "2026-05-04 08:00", "2026-05-04 09:00", "2026-05-04 10:00", "2026-05-04 11:00", "2026-05-04 12:00", "2026-05-04 13:00"];
+      const nowData = [2262.01, 2265.7, 2257.24, 2258.14, 2259.84, 2261.99, 2264.34, 2256.29, 2254.25, 2257.51, 2260.0, 2267.75, 2266.94, 2282.87, 2280.12, 2283.26, 2277.45, 2279.48, 2286.92, 2282.07, 2282.53, 2286.45, 2301.36, 2318.22, 2308.04, 2307.64, 2301.94, 2311.76, 2304.76, 2304.85, 2285.19, 2292.68, 2293.5, 2295.63, 2297.6, 2298.63, 2303.31, 2304.44, 2301.26, 2299.47, 2305.58, 2301.02, 2303.35, 2305.13, 2303.54, 2302.1, 2303.52, 2308.08, 2306.69, 2309.19, 2309.31, 2305.9, 2310.3, 2311.08, 2311.58, 2325.62, 2327.0, 2316.97, 2313.98, 2304.14, 2303.41, 2301.9, 2301.53, 2304.11, 2304.49, 2309.28, 2308.28, 2316.47, 2311.54, 2319.63, 2325.71, 2326.41, 2325.97, 2328.44, 2325.6, 2331.85, 2330.98, 2330.3, 2334.83, 2331.24, 2350.03, 2322.65, 2319.0, 2351.2, 2374.73, 2385.12, 2390.12, 2376.19, 2368.41, 2362.8, 2360.04, 2368.71, 2338.36, 2337.59, 2335.53, 2330.64];
+      const futureData = [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 2330.64, 2327.17, 2324.08];
+      const ctx = document.getElementById("priceChart");
+      if (!ctx || !labels.length) return;
+
+      const extendedLabels = [...labels, "T+1", "T+2"];
+      const alignedNow = [...nowData, null, null];
+
+      new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: extendedLabels,
+          datasets: [
+            {
+              label: "ETH Close",
+              data: alignedNow,
+              borderColor: "#3ddc97",
+              backgroundColor: "rgba(61,220,151,0.08)",
+              borderWidth: 2,
+              pointRadius: 0,
+              fill: true,
+              tension: 0.35,
+            },
+            {
+              label: "Hypothetical",
+              data: futureData,
+              borderColor: "#f5c45b",
+              borderWidth: 1.6,
+              borderDash: [6, 4],
+              pointRadius: 0,
+              fill: false,
+              tension: 0.35,
+            },
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              mode: "index",
+              intersect: false,
+            }
+          },
+          interaction: {
+            mode: "index",
+            intersect: false
+          },
+          scales: {
+            x: {
+              ticks: { color: getComputedStyle(document.documentElement).getPropertyValue("--muted"), maxTicksLimit: 7 },
+              grid: { color: "rgba(127,135,170,0.18)" },
+            },
+            y: {
+              ticks: { color: getComputedStyle(document.documentElement).getPropertyValue("--muted") },
+              grid: { color: "rgba(127,135,170,0.18)" },
+            },
+          },
+        },
+      });
+    })();
+  </script>
 </body>
 </html>
