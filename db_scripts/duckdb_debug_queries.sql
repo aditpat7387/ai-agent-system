@@ -1,0 +1,2 @@
+DESCRIBE paper_trade_agent_log;
+DESCRIBE signal_log;

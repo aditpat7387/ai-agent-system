@@ -100,6 +100,7 @@ paper_trade_agent:
 
 signal_agent:
   threshold: 0.78
+  dedup_ttl_hours: 72
   score_col: "rel_score"
   email:
     enabled: true
@@ -134,4 +135,4 @@ orchestrator:
     - signal_agent
     - dashboard_agent
     - run_logger
-  schedule_hint: "hourly"
+  schedule_hint: "hourly" 

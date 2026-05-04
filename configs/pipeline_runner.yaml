@@ -1,0 +1,40 @@
+pipeline:
+  name: claudex_end_to_end
+  description: Local end-to-end Claudex production pipeline
+
+steps:
+  - name: ingest
+    enabled: true
+    module: src.data.ingest_ethusd
+
+  - name: load_duckdb
+    enabled: true
+    module: src.data.duckdb_loader
+
+  - name: build_canonical
+    enabled: true
+    module: src.data.build_canonical_market_table
+
+  - name: validate_market
+    enabled: true
+    module: src.data.validate_market_data
+
+  - name: build_features_v2
+    enabled: true
+    module: src.features.build_feature_store_v2
+
+  - name: validate_features_v2
+    enabled: true
+    module: src.features.validate_feature_store_v2
+
+  - name: build_regime
+    enabled: true
+    module: src.features.build_regime_table
+
+  - name: build_training_view_v2
+    enabled: true
+    module: src.features.build_training_view_v2
+
+  - name: orchestrator
+    enabled: true
+    module: src.agents.orchestrator

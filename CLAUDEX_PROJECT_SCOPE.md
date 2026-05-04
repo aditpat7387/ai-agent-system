@@ -58,6 +58,56 @@ Data Agent
         if confidence above 0.85, notifies User for manual investing decision
 
 ---
+## Pipeline and Operations Update
+
+### Current Operating Contract
+Claudex must run as a single deterministic local pipeline with one scheduled launcher. The launcher executes ingestion first, then DuckDB loading, canonical market table rebuild, feature refresh, model/prediction orchestration, paper trading, signal emission, drift detection, retraining, and dashboard rendering.
+
+### Launch Order
+1. `src/data/ingest_ethusd.py`
+2. `src/data/duckdb_loader.py`
+3. `src/data/build_canonical_market_table.py`
+4. `src/features/build_feature_store_v2.py`
+5. `src/features/build_regime_table.py`
+6. `src/features/build_training_view_v2.py`
+7. `src/agents/orchestrator.py`
+
+### Scheduling Rule
+Only the top-level launcher is scheduled. Individual agents are not scheduled independently because that creates freshness drift and partial-state execution.
+
+### Freshness Rule
+Every cycle must prove that the raw Binance export advanced before downstream tables are rebuilt. If ingestion does not produce a newer raw file, the pipeline must stop before analytics.
+
+### Data Boundary
+`data/raw/binance` is staging only. `data/market.duckdb` is the system of record for downstream analytics, agent decisions, and dashboard generation.
+
+### Operational Acceptance Criteria
+- New raw parquet file exists after each successful ingest cycle.
+- DuckDB raw table matches the newest parquet file.
+- Canonical market and feature tables advance to the latest candle.
+- Orchestrator executes only after fresh data is confirmed.
+- Logs capture every stage and run outcome.
+- Dashboard reflects the latest successful cycle.
+
+### Failure Modes
+- Ingestion job missing from scheduler.
+- Loader reading stale raw file.
+- Canonical or feature builders skipped after load.
+- Orchestrator running on stale DuckDB state.
+- Duplicate-suppression hiding upstream freshness problems.
+
+# Pipeline YAML recommendation
+
+Use `configs/pipeline_runner.yaml` as the pipeline-step control file for `run_pipeline.py`.
+
+## Why this file
+- Keeps the launcher generic.
+- Lets you reorder, disable, or add steps without editing Python.
+- Makes scheduler behavior easier to audit.
+- Fits your existing YAML-based config pattern.
+
+## Expected location
+`configs/pipeline_runner.yaml`
 
 ## Claude Code Architecture Integration
 

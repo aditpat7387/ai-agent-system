@@ -45,28 +45,28 @@ def _coerce_bool_series(s: pd.Series) -> pd.Series:
 
 def run_dashboard_agent(cfg: dict, context: dict) -> dict:
     dashcfg = cfg["dashboard_agent"]
-    paths = cfg["paths"]
-    tables = cfg["tables"]
+    paths   = cfg["paths"]
+    tables  = cfg["tables"]
 
-    db_path = PROJECT_ROOT / paths["db_path"]
+    db_path     = PROJECT_ROOT / paths["db_path"]
     output_path = PROJECT_ROOT / dashcfg["output_path"]
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     con = duckdb.connect(str(db_path))
 
     try:
-        run_id = context.get("run_id", "unknown")
-        generated_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
-        active_model = Path(cfg["prediction_agent"]["model_path"]).name
-        band_name = cfg["paper_trade_agent"].get("band_name", "ge_0.78")
-        lookback_trades = int(dashcfg.get("lookback_trades", 50))
+        run_id            = context.get("run_id", "unknown")
+        generated_at      = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+        active_model      = Path(cfg["prediction_agent"]["model_path"]).name
+        band_name         = cfg["paper_trade_agent"].get("band_name", "ge_0.78")
+        lookback_trades   = int(dashcfg.get("lookback_trades", 50))
         recent_trade_days = int(dashcfg.get("recent_trade_days", 14))
 
-        market_table = tables["canonical_market"]
-        pred_table = tables["predictions"]
-        trade_table = tables["paper_trades"]
-        run_log_table = tables["run_log"]
-        signal_log_table = tables["signal_log"]
+        market_table         = tables["canonical_market"]
+        pred_table           = tables["predictions"]
+        trade_table          = tables["paper_trades"]
+        run_log_table        = tables["run_log"]
+        signal_log_table     = tables["signal_log"]
         compression_selected = tables["compression_selected"]
 
         now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
@@ -82,45 +82,52 @@ def run_dashboard_agent(cfg: dict, context: dict) -> dict:
             return (now_utc - ts).total_seconds() / 3600.0
 
         latest_market_df = _safe_df(con, f"SELECT MAX(open_time) AS t FROM {market_table}")
-        latest_pred_df = _safe_df(con, f"SELECT MAX(open_time) AS t FROM {pred_table}")
-        latest_trade_df = _safe_df(con, f"""
+        latest_pred_df   = _safe_df(con, f"SELECT MAX(open_time) AS t FROM {pred_table}")
+        latest_trade_df  = _safe_df(con, f"""
             SELECT MAX(COALESCE(TRY_CAST(trade_time_utc AS TIMESTAMP), entry_time)) AS t
             FROM {trade_table}
         """)
         latest_run_df = _safe_df(con, f"SELECT MAX(run_start_utc) AS t FROM {run_log_table}")
 
         hours_stale_market = _stale_hours(latest_market_df)
-        hours_stale_pred = _stale_hours(latest_pred_df)
-        hours_stale_trade = _stale_hours(latest_trade_df)
+        hours_stale_pred   = _stale_hours(latest_pred_df)
+        hours_stale_trade  = _stale_hours(latest_trade_df)
 
         wf_df = _safe_df(con, f"SELECT * FROM {compression_selected} LIMIT 1")
 
+        # FIX: resolve sort_ts in SQL via COALESCE(TRY_CAST(...)) so Python never
+        # needs to coerce a VARCHAR trade_time_utc that may be empty or malformed.
+        # Also handles both vol20 and vol_20 column name variants.
         trades_df = _safe_df(con, f"""
-            SELECT
-                run_id,
-                entry_time,
-                exit_time,
-                regime_label,
-                entry_price,
-                exit_price,
-                specialist_pred_proba,
-                specialist_pred_label,
-                vol_20,
-                stop_pct,
-                take_profit_pct,
-                exit_reason,
-                bars_held,
-                breakeven_activated,
-                partial_tp_hit,
-                gross_return,
-                net_return,
-                pnl_dollars,
-                account_equity,
-                trade_time_utc
-            FROM {trade_table}
-            ORDER BY COALESCE(TRY_CAST(trade_time_utc AS TIMESTAMP), entry_time) DESC
-            LIMIT {lookback_trades * 8}
-        """)
+                        SELECT
+                              run_id,
+                              entry_time,
+                              exit_time,
+                              regime_label,
+                              entry_price,
+                              exit_price,
+                              specialist_pred_proba,
+                              specialist_pred_label,
+                              TRY_CAST(vol20 AS DOUBLE) AS vol20,
+                              stop_pct,
+                              take_profit_pct,
+                              exit_reason,
+                              bars_held,
+                              breakeven_activated,
+                              partial_tp_hit,
+                              gross_return,
+                              net_return,
+                              pnl_dollars,
+                              account_equity,
+                              trade_time_utc,
+                              COALESCE(
+                                  TRY_CAST(trade_time_utc AS TIMESTAMP),
+                                  CAST(entry_time AS TIMESTAMP)
+                              ) AS sort_ts
+                          FROM {trade_table}
+                          ORDER BY sort_ts DESC
+                          LIMIT {lookback_trades * 8}
+                """)
 
         runlog_df = _safe_df(con, f"""
             SELECT
@@ -138,14 +145,14 @@ def run_dashboard_agent(cfg: dict, context: dict) -> dict:
 
         signallog_df = _safe_df(con, f"""
             SELECT
-                open_time,
-                rel_score,
-                close,
-                regime,
-                emitted_at
-            FROM {signal_log_table}
-            ORDER BY emitted_at DESC
-            LIMIT 10
+                  open_time,
+                  rel_score,
+                  close,
+                  regime,
+                  emitted_at
+              FROM {signal_log_table}
+              ORDER BY emitted_at DESC
+              LIMIT 10
         """)
 
         market_df = _safe_df(con, f"""
@@ -169,43 +176,36 @@ def run_dashboard_agent(cfg: dict, context: dict) -> dict:
             LIMIT 1
         """)
 
-        drift_events = 0
+        drift_events  = 0
         signals_total = 0
         if not runlog_df.empty and "drift_detected" in runlog_df.columns:
             drift_events = int(_coerce_bool_series(runlog_df["drift_detected"]).sum())
         if not signallog_df.empty:
             signals_total = len(signallog_df)
 
-        oos_pf = 0.0
+        oos_pf           = 0.0
         oos_total_return = 0.0
-        oos_win_rate = 0.0
+        oos_win_rate     = 0.0
         if not wf_df.empty:
-            wfrow = wf_df.iloc[0].to_dict()
-            oos_pf = float(wfrow.get("oos_profit_factor", wfrow.get("profit_factor", 0.0)) or 0.0)
-            oos_total_return = float(wfrow.get("oos_total_net_return", wfrow.get("oos_return", 0.0)) or 0.0)
-            oos_win_rate = float(wfrow.get("oos_win_rate", wfrow.get("win_rate", 0.0)) or 0.0)
+            wfrow            = wf_df.iloc[0].to_dict()
+            oos_pf           = float(wfrow.get("oos_profit_factor",   wfrow.get("profit_factor", 0.0)) or 0.0)
+            oos_total_return = float(wfrow.get("oos_total_net_return", wfrow.get("oos_return",    0.0)) or 0.0)
+            oos_win_rate     = float(wfrow.get("oos_win_rate",         wfrow.get("win_rate",      0.0)) or 0.0)
 
-        total_trades = 0
-        win_rate = 0.0
-        total_return = 0.0
-        equity_labels = []
-        equity_values = []
+        total_trades      = 0
+        win_rate          = 0.0
+        total_return      = 0.0
+        equity_labels     = []
+        equity_values     = []
         recent_trade_rows = []
 
         if not trades_df.empty:
+            # sort_ts already resolved in SQL — no Python-side VARCHAR coercion needed
+            trades_df["sort_ts"]    = pd.to_datetime(trades_df["sort_ts"],    errors="coerce")
             trades_df["entry_time"] = pd.to_datetime(trades_df["entry_time"], errors="coerce")
-            trades_df["exit_time"] = pd.to_datetime(trades_df["exit_time"], errors="coerce")
+            trades_df["exit_time"]  = pd.to_datetime(trades_df["exit_time"],  errors="coerce")
 
-            if "trade_time_utc" in trades_df.columns:
-                trades_df["trade_written_at"] = pd.to_datetime(
-                    trades_df["trade_time_utc"], errors="coerce", utc=True
-                ).dt.tz_convert(None)
-            else:
-                trades_df["trade_written_at"] = pd.NaT
-
-            trades_df["sort_ts"] = trades_df["trade_written_at"].fillna(trades_df["entry_time"])
-            cutoff = now_utc - pd.Timedelta(days=recent_trade_days)
-
+            cutoff    = now_utc - pd.Timedelta(days=recent_trade_days)
             trades_df = trades_df[trades_df["sort_ts"].notna()].copy()
             trades_df = trades_df[trades_df["sort_ts"] >= cutoff].copy()
             trades_df = trades_df.sort_values("sort_ts")
@@ -213,36 +213,34 @@ def run_dashboard_agent(cfg: dict, context: dict) -> dict:
 
             if not trades_df.empty:
                 total_trades = len(trades_df)
-                nr = pd.to_numeric(trades_df["net_return"], errors="coerce").fillna(0.0)
-                win_rate = float((nr > 0).mean())
+                nr           = pd.to_numeric(trades_df["net_return"], errors="coerce").fillna(0.0)
+                win_rate     = float((nr > 0).mean())
 
                 eq_df = trades_df[["sort_ts", "account_equity"]].copy()
                 eq_df["account_equity"] = pd.to_numeric(eq_df["account_equity"], errors="coerce")
                 eq_df = eq_df.dropna()
                 if not eq_df.empty:
-                    start_eq = float(cfg["paper_trade_agent"]["initial_equity"])
+                    start_eq         = float(cfg["paper_trade_agent"]["initial_equity"])
                     eq_df["ret_pct"] = (eq_df["account_equity"] / start_eq - 1.0) * 100.0
-                    equity_labels = [_fmt_ts(t) for t in eq_df["sort_ts"].tolist()]
-                    equity_values = [round(float(x), 3) for x in eq_df["ret_pct"].tolist()]
-                    total_return = float(eq_df["account_equity"].iloc[-1] / start_eq - 1.0)
+                    equity_labels    = [_fmt_ts(t) for t in eq_df["sort_ts"].tolist()]
+                    equity_values    = [round(float(x), 3) for x in eq_df["ret_pct"].tolist()]
+                    total_return     = float(eq_df["account_equity"].iloc[-1] / start_eq - 1.0)
 
                 view_df = trades_df.sort_values("sort_ts", ascending=False).head(lookback_trades)
                 for _, r in view_df.iterrows():
-                    net_ret_pct = float(pd.to_numeric(pd.Series([r.get("net_return")]), errors="coerce").fillna(0.0).iloc[0]) * 100.0
-                    pnl_val = float(pd.to_numeric(pd.Series([r.get("pnl_dollars")]), errors="coerce").fillna(0.0).iloc[0])
-                    recent_trade_rows.append(
-                        {
-                            "entry_time": _fmt_ts(r.get("entry_time")),
-                            "entry_price": _fmt_num(r.get("entry_price"), 2),
-                            "exit_price": _fmt_num(r.get("exit_price"), 2),
-                            "confidence": _fmt_num(r.get("specialist_pred_proba"), 3),
-                            "exit_reason": r.get("exit_reason", ""),
-                            "net_return": round(net_ret_pct, 3),
-                            "pnl": round(pnl_val, 2),
-                            "bars_held": int(pd.to_numeric(pd.Series([r.get("bars_held")]), errors="coerce").fillna(0).iloc[0]),
-                            "written_at": _fmt_ts(r.get("sort_ts")),
-                        }
-                    )
+                    net_ret_pct = float(pd.to_numeric(pd.Series([r.get("net_return")]),  errors="coerce").fillna(0.0).iloc[0]) * 100.0
+                    pnl_val     = float(pd.to_numeric(pd.Series([r.get("pnl_dollars")]), errors="coerce").fillna(0.0).iloc[0])
+                    recent_trade_rows.append({
+                        "entry_time":  _fmt_ts(r.get("entry_time")),
+                        "entry_price": _fmt_num(r.get("entry_price"), 2),
+                        "exit_price":  _fmt_num(r.get("exit_price"),  2),
+                        "confidence":  _fmt_num(r.get("specialist_pred_proba"), 3),
+                        "exit_reason": r.get("exit_reason", ""),
+                        "net_return":  round(net_ret_pct, 3),
+                        "pnl":         round(pnl_val, 2),
+                        "bars_held":   int(pd.to_numeric(pd.Series([r.get("bars_held")]), errors="coerce").fillna(0).iloc[0]),
+                        "written_at":  _fmt_ts(r.get("sort_ts")),
+                    })
 
         run_rows_html = ""
         if not runlog_df.empty:
@@ -682,7 +680,7 @@ def run_dashboard_agent(cfg: dict, context: dict) -> dict:
       padding: 10px 12px;
     }}
 
-    .panel-header {{
+        .panel-header {{
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -886,8 +884,8 @@ def run_dashboard_agent(cfg: dict, context: dict) -> dict:
               <thead>
                 <tr>
                   <th>Entry</th>
-                  <th>Entry</th>
-                  <th>Exit</th>
+                  <th>Entry $</th>
+                  <th>Exit $</th>
                   <th>Conf</th>
                   <th>Exit</th>
                   <th>Return %</th>
