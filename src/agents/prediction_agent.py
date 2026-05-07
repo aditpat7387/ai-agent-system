@@ -57,7 +57,7 @@ def run_prediction_agent(cfg: dict, context: dict) -> dict:
     db_path     = PROJECT_ROOT / paths["db_path"]
     pred_table  = tables["predictions"]
     pred_window = int(pa_cfg["prediction_window_rows"])
-    band_min    = float(pa_cfg.get("band_min", 0.78))
+    band_min    = float(pa_cfg.get("band_min", 0.85))
 
     con = duckdb.connect(str(db_path))
 

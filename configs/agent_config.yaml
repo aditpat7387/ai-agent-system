@@ -78,13 +78,13 @@ prediction_agent:
   feature_cols_path: "models/artifacts/feature_cols.json"
   source_table: "ethusd_features_1h_v2"
   predictions_table: "ethusd_predictions_calibrated_v7"
-  band_min: 0.78
+  band_min: 0.85
   prediction_window_rows: 48
   enabled: true
 
 paper_trade_agent:
-  band_name: "ge_0.78"
-  band_min: 0.78
+  band_name: "ge_0.85"
+  band_min: 0.85
   band_max: null
   fee_bps: 4.0
   slippage_bps: 3.0
